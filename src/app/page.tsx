@@ -1,103 +1,183 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect, useMemo } from 'react';
+import type { Expense } from '@/types/expense';
+import Header from '@/components/Header';
+import ExpenseForm from '@/components/ExpenseForm';
+import ExpenseList from '@/components/ExpenseList';
+import ExpenseChart from '@/components/ExpenseChart';
+
+export default function HomePage() {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [filter, setFilter] = useState('');
+  const [income, setIncome] = useState<number>(0);
+
+  // Load data dari localStorage
+  useEffect(() => {
+    const savedExpenses = localStorage.getItem('expenses');
+    if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+
+    const savedIncome = localStorage.getItem('income');
+    if (savedIncome) setIncome(Number(savedIncome));
+  }, []);
+
+  // Simpan data ke localStorage
+  useEffect(() => {
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+  }, [expenses]);
+
+  useEffect(() => {
+    localStorage.setItem('income', income.toString());
+  }, [income]);
+
+  const handleAddExpense = (expense: Expense) => {
+    setExpenses(prev => [...prev, expense]);
+  };
+
+  const handleExport = () => {
+    const blob = new Blob([JSON.stringify(expenses, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'expenses.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const filteredExpenses = useMemo(() => {
+    if (!filter) return expenses;
+    return expenses.filter(exp => exp.category === filter);
+  }, [expenses, filter]);
+
+  const total = useMemo(
+    () => filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0),
+    [filteredExpenses]
+  );
+
+  const remaining = income - total;
+  const percentage = income > 0 ? (total / income) * 100 : 0;
+
+  let progressColor = 'bg-green-500';
+  if (percentage >= 80) progressColor = 'bg-red-500';
+  else if (percentage >= 50) progressColor = 'bg-yellow-500';
+
+  // Format angka input gaji
+  const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\./g, '');
+    if (!isNaN(Number(raw))) {
+      setIncome(Number(raw));
+    }
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="min-h-screen bg-gray-100">
+      <Header />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <div className="p-4 pb-0">
+        <div className="px-4 py-3 leading-normal bg-green-100 rounded-lg" role="alert">
+          <p>Hello, welcome to your financial planner 👋</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+
+      <div className="max-w-8xl mx-auto p-4 flex flex-col md:flex-row gap-4">
+        {/* Bagian kiri */}
+        <div className="w-full md:w-1/3 space-y-4">
+          {/* Input pemasukan */}
+          <div className="p-6 bg-white rounded-2xl shadow-sm">
+            <label className="block mb-2 font-semibold text-green-600 text-lg">Pemasukan / Gaji</label>
+            <input
+              type="text"
+              value={income ? income.toLocaleString('id-ID') : '0'}
+              onChange={handleIncomeChange}
+              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+              placeholder="Masukkan jumlah pemasukan"
+            />
+          </div>
+
+          <div className="p-6 bg-white rounded-2xl shadow-sm">
+            <ExpenseForm onAdd={handleAddExpense} />
+          </div>
+
+          <div className="flex gap-2 p-6 bg-white rounded-2xl shadow-sm">
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="w-full p-3 border border-gray-200 rounded-lg flex-1 focus:outline-none focus:ring-2 focus:ring-green-400"
+            >
+              <option value="">Semua Kategori</option>
+              <option value="Makanan">Makanan</option>
+              <option value="Transportasi">Transportasi</option>
+              <option value="Hiburan">Hiburan</option>
+              <option value="Tagihan">Tagihan</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+
+            <button
+              onClick={handleExport}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+            >
+              Export
+            </button>
+          </div>
+        </div>
+
+        {/* Bagian kanan */}
+        <div className="w-full md:w-2/3 space-y-4">
+          {/* Bagian Total & Sisa */}
+          <div className="p-6 bg-white rounded-2xl shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-2xl font-bold">Total Pemasukan</span>
+              <span className="text-2xl font-bold">
+                Rp {income.toLocaleString('id-ID')}
+              </span>
+            </div>
+
+            {/* Garis pemisah putus-putus */}
+            <hr className="border-t border-gray-300 border-dashed mb-4" />
+
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-2xl font-bold text-red-500">Total Pengeluaran</span>
+              <span className="text-2xl font-bold">
+                Rp {total.toLocaleString('id-ID')}
+              </span>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full h-4 bg-gray-200 rounded-full mb-2 overflow-hidden">
+              <div
+                className={`h-4 rounded-full ${progressColor} transition-all duration-500 ease-out`}
+                style={{ width: `${Math.min(percentage, 100)}%` }}
+              ></div>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              {percentage.toFixed(1)}% dari pemasukan
+            </p>
+
+            <div className="flex justify-between items-center">
+              <span className="text-2xl font-bold text-green-600">Sisa Uang</span>
+              <span
+                className={`text-2xl font-bold ${remaining < 0 ? 'text-red-600' : 'text-green-600'
+                  }`}
+              >
+                Rp {remaining.toLocaleString('id-ID')}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-6 bg-white rounded-2xl shadow-sm">
+            <ExpenseList expenses={filteredExpenses} />
+          </div>
+
+          {filteredExpenses.length > 0 && (
+            <div className="p-6 bg-white rounded-2xl shadow-sm">
+              <ExpenseChart expenses={filteredExpenses} />
+            </div>
+          )}
+        </div>
+      </div>
+
+    </main>
   );
 }
