@@ -29,7 +29,7 @@ export default function ExpenseChart({
   const totalAmount = groupedData.reduce((sum: number, item: any) => sum + item.amount, 0);
 
   return (
-    <div className="bg-white h-64">
+    <div className="bg-white min-h-64">
       <h2 className="text-lg font-bold mb-2">Distribusi Pengeluaran per Kategori</h2>
 
       {totalAmount > 0 ? (
