@@ -56,12 +56,13 @@ export default function ExpenseChart({
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number) => {
+                formatter={(value: number, name: string, props) => {
                   const percent = ((value / totalAmount) * 100).toFixed(1);
-                  return [`Rp ${value.toLocaleString('id-ID')} (${percent}%)`, 'Jumlah'];
+                  const label = props.payload?.name || ''; // ambil nama kategori
+                  return [`${label} Rp ${value.toLocaleString('id-ID')} (${percent}%)`];
                 }}
-                labelFormatter={(label) => `Kategori: ${label}`}
               />
+
             </PieChart>
           </ResponsiveContainer>
         </div>

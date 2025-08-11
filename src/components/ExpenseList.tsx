@@ -2,14 +2,15 @@
 import { useState, useMemo } from 'react';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
 import type { Expense } from '@/types/expense';
+import ConfirmModal from "./ConfirmModal"; // path disesuaikan
 
-const COLORS = {
+const COLORS: Record<string, string> = {
     Makanan: '#60a5fa',       // biru pastel
     Transportasi: '#34d399',  // hijau pastel
     Hiburan: '#fcd34d',       // kuning pastel
     Tagihan: '#fb923c',       // oranye pastel
     Lainnya: '#f87171',       // merah pastel
-};
+  };
 
 export default function ExpenseList({
     expenses,
@@ -31,6 +32,23 @@ export default function ExpenseList({
     const [editDate, setEditDate] = useState('');
     const [editNote, setEditNote] = useState('');
 
+    // State untuk modal konfirmasi
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<string | null>(null);
+
+    const confirmDelete = (id: string) => {
+        setDeleteId(id);
+        setShowConfirm(true);
+    };
+
+    const handleDelete = () => {
+        if (deleteId) {
+            onDelete(deleteId);
+        }
+        setShowConfirm(false);
+        setDeleteId(null);
+    };
+
     const formatNumber = (value: string) => {
         const numericValue = value.replace(/\D/g, '');
         return numericValue ? parseInt(numericValue, 10).toLocaleString('id-ID') : '';
@@ -50,20 +68,33 @@ export default function ExpenseList({
         setEditNote(expense.note || '');
     };
 
-    const saveEdit = () => {
-        if (!editName || !editAmount || !editDate) return;
-        const numericAmount = parseFloat(editAmount.replace(/\./g, ''));
-        onEdit({
-            id: editingId!,
-            name: editName,
-            amount: numericAmount,
-            category: editCategory,
-            date: editDate,
-            month, // tetap ikut month filter supaya tidak hilang
-            note: editNote || undefined,
-        });
-        setEditingId(null);
-    };
+// state untuk modal simpan
+const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+
+// logic asli save edit dipisah
+const saveEditLogic = () => {
+  if (!editName || !editAmount || !editDate) {
+    alert('Harap isi semua data yang wajib diisi.');
+    return;
+  }
+  const numericAmount = parseFloat(editAmount.replace(/\./g, '').replace(/,/g, ''));
+  onEdit({
+    id: editingId!,
+    name: editName,
+    amount: numericAmount,
+    category: editCategory,
+    date: editDate,
+    month,
+    note: editNote || undefined,
+  });
+  setEditingId(null);
+};
+
+// handler tombol simpan (hanya buka modal)
+const saveEdit = () => {
+  setShowSaveConfirm(true);
+};
+
 
     const displayedExpenses = useMemo(() => {
         return expenses.filter(
@@ -183,7 +214,7 @@ export default function ExpenseList({
                                         <Pencil size={18} />
                                     </button>
                                     <button
-                                        onClick={() => onDelete(expense.id)}
+                                        onClick={() => confirmDelete(expense.id)}
                                         className="text-red-500 hover:text-red-700"
                                     >
                                         <Trash2 size={18} />
@@ -194,6 +225,26 @@ export default function ExpenseList({
                     </li>
                 ))}
             </ul>
+
+            {/* Modal Konfirmasi */}
+            <ConfirmModal
+                isOpen={showConfirm}
+                title="Hapus Data Pengeluaran"
+                message="Yakin ingin menghapus pengeluaran ini?"
+                onCancel={() => setShowConfirm(false)}
+                onConfirm={handleDelete}
+            />
+
+            <ConfirmModal
+                isOpen={showSaveConfirm}
+                title="Konfirmasi Simpan"
+                message={`Yakin ingin menyimpan perubahan untuk "${editName}"?`}
+                onConfirm={() => {
+                    saveEditLogic();
+                    setShowSaveConfirm(false);
+                }}
+                onCancel={() => setShowSaveConfirm(false)}
+            />
         </div>
     );
 }

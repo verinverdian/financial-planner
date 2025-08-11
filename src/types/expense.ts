@@ -1,5 +1,4 @@
 export type Expense = {
-  // month: string;
   id: string;             // ID unik untuk edit/hapus
   name: string;           // Nama pengeluaran
   amount: number;         // Jumlah pengeluaran

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import type { Income } from '@/types/income';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
+import ConfirmModal from "./ConfirmModal"; // path disesuaikan
 
 export default function IncomeList({
   incomes,
@@ -17,6 +18,23 @@ export default function IncomeList({
   const [editAmount, setEditAmount] = useState('');
   const [editMonth, setEditMonth] = useState('');
   const [editNote, setEditNote] = useState('');
+
+  // State untuk modal konfirmasi
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const confirmDelete = (id: string) => {
+    setDeleteId(id);
+    setShowConfirm(true);
+  };
+
+  const handleDelete = () => {
+    if (deleteId) {
+      onDelete(deleteId);
+    }
+    setShowConfirm(false);
+    setDeleteId(null);
+  };
 
   const formatNumber = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
@@ -36,8 +54,14 @@ export default function IncomeList({
     setEditNote(income.note || '');
   };
 
-  const saveEdit = () => {
-    if (!editSource || !editAmount || !editMonth) return;
+  // state untuk modal simpan
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+
+  const saveEditLogic = () => {
+    if (!editSource || !editAmount || !editMonth) {
+      alert('Harap isi semua data yang wajib diisi.')
+      return;
+    }
     const numericAmount = parseFloat(editAmount.replace(/\./g, ''));
     onEdit({
       id: editingId!,
@@ -49,21 +73,26 @@ export default function IncomeList({
     setEditingId(null);
   };
 
+  // handler tombol simpan (hanya buka modal)
+  const saveEdit = () => {
+    setShowSaveConfirm(true);
+  };
+
   if (incomes.length === 0) {
     return (
-        <div className="bg-white">
-            <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
-            <p className="text-gray-500 text-sm">Belum ada pemasukan untuk bulan ini.</p>
-        </div>
+      <div className="bg-white">
+        <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
+        <p className="text-gray-500 text-sm">Belum ada pemasukan untuk bulan ini.</p>
+      </div>
     );
-}
+  }
 
-const formatMonthYear = (monthStr: string) => {
-  const date = new Date(monthStr);
-  const month = date.getMonth() + 1; // getMonth() 0-based, jadi +1
-  const year = date.getFullYear();
-  return `${month.toString().padStart(2, '0')}-${year}`;
-};
+  const formatMonthYear = (monthStr: string) => {
+    const date = new Date(monthStr);
+    const month = date.getMonth() + 1; // getMonth() 0-based, jadi +1
+    const year = date.getFullYear();
+    return `${month.toString().padStart(2, '0')}-${year}`;
+  };
 
 
   return (
@@ -74,6 +103,7 @@ const formatMonthYear = (monthStr: string) => {
           <li key={income.id} className="py-2 flex items-center justify-between">
             {editingId === income.id ? (
               <div className="flex flex-col gap-2 w-full">
+                <p className="font-semibold">Edit Data</p>
                 <input
                   type="text"
                   value={editSource}
@@ -119,7 +149,9 @@ const formatMonthYear = (monthStr: string) => {
                   <p className="font-semibold">{income.source}</p>
                   <p className="text-sm text-gray-500">
                     Rp {income.amount.toLocaleString('id-ID')} • {formatMonthYear(income.month)}
-                    {income.note && ` • ${income.note}`}
+                    {income.note && ` • Note: ${income.note.length > 30
+                      ? income.note.substring(0, 30) + '...'
+                      : income.note}`}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -130,9 +162,8 @@ const formatMonthYear = (monthStr: string) => {
                     <Pencil size={18} />
                   </button>
                   <button
-                    onClick={() => onDelete(income.id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
+                    onClick={() => confirmDelete(income.id)}
+                    className="text-red-500 hover:text-red-700"                  >
                     <Trash2 size={18} />
                   </button>
                 </div>
@@ -141,6 +172,24 @@ const formatMonthYear = (monthStr: string) => {
           </li>
         ))}
       </ul>
+      {/* Modal Konfirmasi */}
+      <ConfirmModal
+        isOpen={showConfirm}
+        title="Hapus Data Pemasukan"
+        message="Yakin ingin menghapus pemasukan ini?"
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={handleDelete}
+      />
+      <ConfirmModal
+        isOpen={showSaveConfirm}
+        title="Konfirmasi Simpan"
+        message={`Yakin ingin menyimpan perubahan untuk "${editSource}"?`}
+        onConfirm={() => {
+          saveEditLogic();
+          setShowSaveConfirm(false);
+        }}
+        onCancel={() => setShowSaveConfirm(false)}
+      />
     </div>
   );
 }
