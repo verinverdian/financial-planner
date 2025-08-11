@@ -2,63 +2,74 @@
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
-const COLORS = ['#60a5fa', // biru pastel (blue-400)
-    '#34d399', // hijau pastel (emerald-400)
-    '#fcd34d', // kuning pastel (yellow-300)
-    '#fb923c', // oranye pastel (orange-400)
-    '#f87171'  // merah pastel (red-400)
-]
+const COLORS: Record<string, string> = {
+  Makanan: '#60a5fa',       // biru pastel
+  Transportasi: '#34d399',  // hijau pastel
+  Hiburan: '#fcd34d',       // kuning pastel
+  Tagihan: '#fb923c',       // oranye pastel
+  Lainnya: '#f87171',       // merah pastel
+};
 
 export default function ExpenseChart({
-    expenses,
+  expenses,
 }: {
-    expenses: { name: string; amount: number; category: string }[];
+  expenses: { name: string; amount: number; category: string }[];
 }) {
-    const groupedData = Object.values(
-        expenses.reduce((acc: any, curr) => {
-            if (!acc[curr.category]) {
-                acc[curr.category] = { name: curr.category, amount: 0 };
-            }
-            acc[curr.category].amount += curr.amount;
-            return acc;
-        }, {})
-    );
+  // Gabungkan pengeluaran berdasarkan kategori
+  const groupedData = Object.values(
+    expenses.reduce((acc: any, curr) => {
+      if (!acc[curr.category]) {
+        acc[curr.category] = { name: curr.category, amount: 0, category: curr.category };
+      }
+      acc[curr.category].amount += curr.amount;
+      return acc;
+    }, {})
+  );
 
-    const totalAmount = groupedData.reduce((sum: number, item: any) => sum + item.amount, 0);
+  const totalAmount = groupedData.reduce((sum: number, item: any) => sum + item.amount, 0);
 
-    return (
-        <div className="bg-white">
-            <h2 className="text-lg font-bold mb-2">Expense Distribution by Category</h2>
-            <div className="h-64">
-                <ResponsiveContainer>
-                    <PieChart>
-                        <Pie
-                            data={groupedData}
-                            dataKey="amount"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={80}
-                            label={({ name, amount }) => {
-                                const percent = ((amount / totalAmount) * 100).toFixed(1);
-                                return `${name} (${percent}%)`;
-                            }}
-                        >
-                            {groupedData.map((_, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Pie>
+  return (
+    <div className="bg-white h-64">
+      <h2 className="text-lg font-bold mb-2">Distribusi Pengeluaran per Kategori</h2>
 
-                        <Tooltip
-                            formatter={(value: number) => {
-                                const percent = ((value / totalAmount) * 100).toFixed(1);
-                                return [`Rp ${value.toLocaleString('id-ID')} (${percent}%)`, 'Jumlah'];
-                            }}
-                            labelFormatter={(label) => `Kategori: ${label}`}
-                        />
-                    </PieChart>
-                </ResponsiveContainer>
-            </div>
+      {totalAmount > 0 ? (
+        <div className="h-64">
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie
+                data={groupedData}
+                dataKey="amount"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                label={({ name, amount }) => {
+                  const percent = ((amount / totalAmount) * 100).toFixed(1);
+                  return `${name} (${percent}%)`;
+                }}
+              >
+                {groupedData.map((entry: any, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[entry.category] || '#ccc'}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value: number) => {
+                  const percent = ((value / totalAmount) * 100).toFixed(1);
+                  return [`Rp ${value.toLocaleString('id-ID')} (${percent}%)`, 'Jumlah'];
+                }}
+                labelFormatter={(label) => `Kategori: ${label}`}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
-    );
+      ) : (
+        <div className="flex items-center justify-center h-56">
+          <p className="text-gray-500 text-sm">Belum ada data untuk bulan ini.</p>
+        </div>
+      )}
+    </div>
+  );
 }

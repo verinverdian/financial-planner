@@ -2,104 +2,155 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Expense } from '@/types/expense';
+import type { Income } from '@/types/income';
 import Header from '@/components/Header';
 import ExpenseForm from '@/components/ExpenseForm';
 import ExpenseList from '@/components/ExpenseList';
 import ExpenseChart from '@/components/ExpenseChart';
+import IncomeForm from '@/components/IncomeForm';
+import IncomeList from '@/components/IncomeList';
 
 export default function HomePage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [incomes, setIncomes] = useState<Income[]>([]);
   const [filter, setFilter] = useState('');
-  const [income, setIncome] = useState<number>(0);
+  const [month, setMonth] = useState<string>(''); // format YYYY-MM
 
-  // Load data dari localStorage
+  // === Load dari localStorage ===
   useEffect(() => {
     const savedExpenses = localStorage.getItem('expenses');
     if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
 
-    const savedIncome = localStorage.getItem('income');
-    if (savedIncome) setIncome(Number(savedIncome));
+    const savedIncomes = localStorage.getItem('incomes');
+    if (savedIncomes) setIncomes(JSON.parse(savedIncomes));
+
+    const savedMonth = localStorage.getItem('month');
+    if (savedMonth) setMonth(savedMonth);
   }, []);
 
-  // Simpan data ke localStorage
+  // === Simpan ke localStorage ===
   useEffect(() => {
     localStorage.setItem('expenses', JSON.stringify(expenses));
   }, [expenses]);
 
   useEffect(() => {
-    localStorage.setItem('income', income.toString());
-  }, [income]);
+    localStorage.setItem('incomes', JSON.stringify(incomes));
+  }, [incomes]);
 
-  const handleAddExpense = (expense: Expense) => {
-    setExpenses(prev => [...prev, expense]);
+  useEffect(() => {
+    localStorage.setItem('month', month);
+  }, [month]);
+
+  // === Handler Tambah Income ===
+  const handleAddIncome = (income: Income) => {
+    if (!income.amount || income.amount <= 0) {
+      alert('Nominal pemasukan harus lebih dari 0');
+      return;
+    }
+    if (!income.source) {
+      alert('Sumber pemasukan tidak boleh kosong');
+      return;
+    }
+    setIncomes(prev => [...prev, { ...income, month }]);
   };
 
+  // === Handler Tambah Expense ===
+  const handleAddExpense = (expense: Expense) => {
+    if (!expense.amount || expense.amount <= 0) {
+      alert('Nominal pengeluaran harus lebih dari 0');
+      return;
+    }
+    if (!expense.category) {
+      alert('Kategori tidak boleh kosong');
+      return;
+    }
+    setExpenses(prev => [...prev, { ...expense, month }]);
+  };
+
+  // === Filter data per bulan & kategori ===
+  const filteredIncomes = useMemo(() => {
+    return incomes.filter(inc => inc.month === month);
+  }, [incomes, month]);
+
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter(
+      exp =>
+        exp.month === month &&
+        (filter ? exp.category === filter : true)
+    );
+  }, [expenses, filter, month]);
+
+  // === Hitung total ===
+  const totalIncome = filteredIncomes.reduce((sum, inc) => sum + inc.amount, 0);
+  const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const remaining = totalIncome - totalExpenses;
+  const percentage = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
+
+  // === Export data ===
   const handleExport = () => {
-    const blob = new Blob([JSON.stringify(expenses, null, 2)], {
+    const data = {
+      incomes: filteredIncomes,
+      expenses: filteredExpenses
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: 'application/json',
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'expenses.json';
+    a.download = `finance-${month}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  const filteredExpenses = useMemo(() => {
-    if (!filter) return expenses;
-    return expenses.filter(exp => exp.category === filter);
-  }, [expenses, filter]);
-
-  const total = useMemo(
-    () => filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0),
-    [filteredExpenses]
-  );
-
-  const remaining = income - total;
-  const percentage = income > 0 ? (total / income) * 100 : 0;
-
+  // Warna progress bar
   let progressColor = 'bg-green-500';
   if (percentage >= 80) progressColor = 'bg-red-500';
   else if (percentage >= 50) progressColor = 'bg-yellow-500';
 
-  // Format angka input gaji
-  const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\./g, '');
-    if (!isNaN(Number(raw))) {
-      setIncome(Number(raw));
-    }
+  // Format bulan-tahun
+  const formatMonthYear = (monthString: string) => {
+    if (!monthString) return '';
+    const [year, month] = monthString.split('-');
+    const date = new Date(Number(year), Number(month) - 1);
+    return date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
   };
 
   return (
     <main className="min-h-screen bg-gray-100">
       <Header />
 
-      <div className="p-4 pb-0">
-        <div className="px-4 py-3 leading-normal bg-green-100 rounded-lg" role="alert">
-          <p>Hello, welcome to your financial planner 👋</p>
+      <div className="p-4 pb-0 shadow-sm">
+        <div className="px-4 py-3 leading-normal bg-green-100 rounded-lg border-2 border-green-400">
+          <p>Halo 👋, selamat datang di perencana keuangan kamu!</p>
         </div>
       </div>
 
       <div className="max-w-8xl mx-auto p-4 flex flex-col md:flex-row gap-4">
         {/* Bagian kiri */}
         <div className="w-full md:w-1/3 space-y-4">
-          {/* Input pemasukan */}
+          {/* Pilih bulan */}
           <div className="p-6 bg-white rounded-2xl shadow-sm">
-            <label className="block mb-2 font-semibold text-green-600 text-lg">Pemasukan / Gaji</label>
+            <label className="block font-semibold mb-2">Pilih Bulan</label>
             <input
-              type="text"
-              value={income ? income.toLocaleString('id-ID') : '0'}
-              onChange={handleIncomeChange}
+              type="month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
               className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Masukkan jumlah pemasukan"
             />
           </div>
 
+          {/* Form Pemasukan */}
+          <div className="p-6 bg-white rounded-2xl shadow-sm">
+            <IncomeForm onAdd={handleAddIncome} />
+          </div>
+
+          {/* Form Pengeluaran */}
           <div className="p-6 bg-white rounded-2xl shadow-sm">
             <ExpenseForm onAdd={handleAddExpense} />
           </div>
 
+          {/* Filter & Export */}
           <div className="flex gap-2 p-6 bg-white rounded-2xl shadow-sm">
             <select
               value={filter}
@@ -125,59 +176,78 @@ export default function HomePage() {
 
         {/* Bagian kanan */}
         <div className="w-full md:w-2/3 space-y-4">
-          {/* Bagian Total & Sisa */}
+          {/* Ringkasan */}
           <div className="p-6 bg-white rounded-2xl shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-2xl font-bold">Total Pemasukan</span>
-              <span className="text-2xl font-bold">
-                Rp {income.toLocaleString('id-ID')}
-              </span>
+          <div className="flex justify-between mb-4 border-b border-dashed border-gray-400 pb-4">
+              <span className="text-xl font-bold">Total Pemasukan {month && `(${formatMonthYear(month)})`}</span>
+              <span className="text-xl font-bold">Rp {totalIncome.toLocaleString('id-ID')}</span>
             </div>
 
-            {/* Garis pemisah putus-putus */}
-            <hr className="border-t border-gray-300 border-dashed mb-4" />
-
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-2xl font-bold text-red-500">Total Pengeluaran</span>
-              <span className="text-2xl font-bold">
-                Rp {total.toLocaleString('id-ID')}
-              </span>
+            <div className="flex justify-between mb-4 text-red-500">
+              <span className="text-xl font-bold">Total Pengeluaran</span>
+              <span className="text-xl font-bold">Rp {totalExpenses.toLocaleString('id-ID')}</span>
             </div>
-
-            {/* Progress Bar */}
             <div className="w-full h-4 bg-gray-200 rounded-full mb-2 overflow-hidden">
               <div
-                className={`h-4 rounded-full ${progressColor} transition-all duration-500 ease-out`}
+                className={`h-4 rounded-full ${progressColor} transition-all duration-500`}
                 style={{ width: `${Math.min(percentage, 100)}%` }}
-              ></div>
+              />
             </div>
-            <p className="text-sm text-gray-500 mb-4">
-              {percentage.toFixed(1)}% dari pemasukan
-            </p>
-
-            <div className="flex justify-between items-center">
-              <span className="text-2xl font-bold text-green-600">Sisa Uang</span>
-              <span
-                className={`text-2xl font-bold ${remaining < 0 ? 'text-red-600' : 'text-green-600'
-                  }`}
-              >
+            <p className="text-sm text-gray-500 mb-4">{percentage.toFixed(1)}% dari pemasukan</p>
+            <div className="flex justify-between">
+              <span className="text-xl font-bold text-green-600">Sisa Uang</span>
+              <span className={`text-xl font-bold ${remaining < 0 ? 'text-red-600' : 'text-green-600'}`}>
                 Rp {remaining.toLocaleString('id-ID')}
               </span>
             </div>
           </div>
 
+          {/* List Pemasukan */}
           <div className="p-6 bg-white rounded-2xl shadow-sm">
-            <ExpenseList expenses={filteredExpenses} />
+            {/* <IncomeList incomes={filteredIncomes} /> */}
+            <IncomeList
+              incomes={filteredIncomes}
+              onEdit={(updatedIncome) => {
+                setIncomes((prev) =>
+                  prev.map((inc) =>
+                    inc.id === updatedIncome.id ? updatedIncome : inc
+                  )
+                );
+              }}
+              onDelete={(id) => {
+                setIncomes((prev) => prev.filter((inc) => inc.id !== id));
+              }}
+            />
+
           </div>
 
-          {filteredExpenses.length > 0 && (
-            <div className="p-6 bg-white rounded-2xl shadow-sm">
+          {/* List Pengeluaran */}
+          <div className="p-6 bg-white rounded-2xl shadow-sm">
+            <ExpenseList
+              expenses={expenses} // kirim semua
+              month={month}
+              filter={filter}
+              onEdit={(updatedExpense) => {
+                setExpenses((prev) =>
+                  prev.map((exp) =>
+                    exp.id === updatedExpense.id ? updatedExpense : exp
+                  )
+                );
+              }}
+              onDelete={(id) => {
+                setExpenses((prev) => prev.filter((exp) => exp.id !== id));
+              }}
+            />
+          </div>
+
+          {/* Grafik */}
+          <div className="p-6 bg-white rounded-2xl shadow-sm">
+            {filteredExpenses.length >= 0 && (
               <ExpenseChart expenses={filteredExpenses} />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-
     </main>
   );
 }
