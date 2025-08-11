@@ -39,7 +39,7 @@ export default function IncomeForm({ onAdd }: { onAdd: (income: Income) => void 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white mb-4 flex flex-col gap-2">
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 mb-4 flex flex-col gap-2">
       <label className="text-lg font-bold mb-2">Pemasukan</label>
 
       <input

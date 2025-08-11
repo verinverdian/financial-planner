@@ -32,6 +32,7 @@ export default function ExpenseForm({ onAdd }: { onAdd: (expense: Expense) => vo
             category,
             date,
             note: note.trim() || undefined,
+            month: ''
         });
 
         // Reset form
@@ -43,7 +44,7 @@ export default function ExpenseForm({ onAdd }: { onAdd: (expense: Expense) => vo
     };
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white mb-4 flex flex-col gap-2">
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 mb-4 flex flex-col gap-2">
             <label className="text-lg font-bold mb-2">Pengeluaran</label>
 
             <input

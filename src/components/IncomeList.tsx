@@ -80,7 +80,7 @@ export default function IncomeList({
 
   if (incomes.length === 0) {
     return (
-      <div className="bg-white">
+      <div className="bg-white dark:bg-gray-800">
         <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
         <p className="text-gray-500 text-sm">Belum ada pemasukan untuk bulan ini.</p>
       </div>
@@ -96,7 +96,7 @@ export default function IncomeList({
 
 
   return (
-    <div className="bg-white">
+    <div className="bg-white dark:bg-gray-800">
       <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
       <ul className="divide-y">
         {incomes.map((income) => (

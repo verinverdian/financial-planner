@@ -106,7 +106,7 @@ const saveEdit = () => {
 
     if (displayedExpenses.length === 0) {
         return (
-            <div className="bg-white">
+            <div className="bg-white dark:bg-gray-800">
                 <h2 className="text-lg font-bold mb-2">Daftar Pengeluaran</h2>
                 <p className="text-gray-500 text-sm">Belum ada pengeluaran untuk bulan ini.</p>
             </div>
@@ -122,7 +122,7 @@ const saveEdit = () => {
     };
 
     return (
-        <div className="bg-white">
+        <div className="bg-white dark:bg-gray-800">
             <h2 className="text-lg font-bold mb-2">Daftar Pengeluaran</h2>
             <ul className="divide-y">
                 {displayedExpenses.map((expense) => (

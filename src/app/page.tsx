@@ -117,11 +117,11 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-gray-100 dark:bg-gray-600">
       <Header />
 
       <div className="p-4 pb-0 shadow-sm">
-        <div className="px-4 py-3 leading-normal bg-green-100 rounded-lg border-2 border-green-400">
+        <div className="px-4 py-3 leading-normal bg-green-100 dark:bg-gray-800 dark:border-gray-900 rounded-lg border-2 border-green-400">
           <p>Halo 👋, selamat datang di perencana keuangan kamu!</p>
         </div>
       </div>
@@ -130,8 +130,8 @@ export default function HomePage() {
         {/* Bagian kiri */}
         <div className="w-full md:w-1/3 space-y-4">
           {/* Pilih bulan */}
-          <div className="p-6 bg-white rounded-2xl shadow-sm">
-            <label className="block font-semibold mb-2">Pilih Bulan</label>
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+            <label className="block font-semibold mb-2 dark:text-white">Pilih Bulan</label>
             <input
               type="month"
               value={month}
@@ -141,17 +141,17 @@ export default function HomePage() {
           </div>
 
           {/* Form Pemasukan */}
-          <div className="p-6 bg-white rounded-2xl shadow-sm">
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             <IncomeForm onAdd={handleAddIncome} />
           </div>
 
           {/* Form Pengeluaran */}
-          <div className="p-6 bg-white rounded-2xl shadow-sm">
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             <ExpenseForm onAdd={handleAddExpense} />
           </div>
 
           {/* Filter & Export */}
-          <div className="flex gap-2 p-6 bg-white rounded-2xl shadow-sm">
+          <div className="flex gap-2 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
@@ -167,7 +167,7 @@ export default function HomePage() {
 
             <button
               onClick={handleExport}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+              className="bg-green-500 dark:bg-gray-400 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
             >
               Export
             </button>
@@ -177,8 +177,8 @@ export default function HomePage() {
         {/* Bagian kanan */}
         <div className="w-full md:w-2/3 space-y-4">
           {/* Ringkasan */}
-          <div className="p-6 bg-white rounded-2xl shadow-sm">
-          <div className="flex justify-between mb-4 border-b border-dashed border-gray-400 pb-4">
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+            <div className="flex justify-between mb-4 border-b border-dashed border-gray-400 pb-4">
               <span className="text-xl font-bold">Total Pemasukan {month && `(${formatMonthYear(month)})`}</span>
               <span className="text-xl font-bold">Rp {totalIncome.toLocaleString('id-ID')}</span>
             </div>
@@ -203,7 +203,7 @@ export default function HomePage() {
           </div>
 
           {/* List Pemasukan */}
-          <div className="p-6 bg-white rounded-2xl shadow-sm">
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             {/* <IncomeList incomes={filteredIncomes} /> */}
             <IncomeList
               incomes={filteredIncomes}
@@ -222,7 +222,7 @@ export default function HomePage() {
           </div>
 
           {/* List Pengeluaran */}
-          <div className="p-6 bg-white rounded-2xl shadow-sm">
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             <ExpenseList
               expenses={expenses} // kirim semua
               month={month}
@@ -241,7 +241,7 @@ export default function HomePage() {
           </div>
 
           {/* Grafik */}
-          <div className="p-6 bg-white rounded-2xl shadow-sm">
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             {filteredExpenses.length >= 0 && (
               <ExpenseChart expenses={filteredExpenses} />
             )}

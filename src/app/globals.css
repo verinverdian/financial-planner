@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 html {
-  transition: background-color 0.3s, color 0.3s;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dark {
@@ -11,3 +11,4 @@ html {
   background-color: rgba(17, 24, 39, var(--tw-bg-opacity));
   color: white;
 }
+
