@@ -11,10 +11,13 @@ import IncomeForm from '@/components/IncomeForm';
 import IncomeList from '@/components/IncomeList';
 
 export default function HomePage() {
+  const today = new Date();
+  const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [filter, setFilter] = useState('');
-  const [month, setMonth] = useState<string>(''); // format YYYY-MM
+  const [month, setMonth] = useState<string>(currentMonth); // default bulan ini
 
   // === Load dari localStorage ===
   useEffect(() => {
@@ -25,8 +28,12 @@ export default function HomePage() {
     if (savedIncomes) setIncomes(JSON.parse(savedIncomes));
 
     const savedMonth = localStorage.getItem('month');
-    if (savedMonth) setMonth(savedMonth);
-  }, []);
+    if (savedMonth) {
+      setMonth(savedMonth);
+    } else {
+      setMonth(currentMonth); // kalau belum ada, set bulan ini
+    }
+  }, [currentMonth]);
 
   // === Simpan ke localStorage ===
   useEffect(() => {
@@ -87,20 +94,42 @@ export default function HomePage() {
   const percentage = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
 
   // === Export data ===
-  const handleExport = () => {
-    const data = {
-      incomes: filteredIncomes,
-      expenses: filteredExpenses
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: 'application/json',
-    });
+  const handleExportCSV = () => {
+    if (!expenses || expenses.length === 0) {
+      alert("Tidak ada data untuk diexport");
+      return;
+    }
+
+    // Buat salinan data dengan id = nomor urut
+    const dataWithNumberId = expenses.map((item, index) => ({
+      ...item,
+      id: index + 1
+    }));
+
+    // Ambil header dari keys object pertama
+    const headers = Object.keys(dataWithNumberId[0]).join(",");
+
+    // Ambil isi data
+    const rows = dataWithNumberId
+      .map(obj => Object.values(obj)
+        .map(val => `"${val}"`) // Tambahkan tanda kutip agar aman untuk teks
+        .join(","))
+      .join("\n");
+
+    // Gabungkan header + data
+    const csvContent = headers + "\n" + rows;
+
+    // Buat file blob untuk diunduh
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `finance-${month}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+
+    // Buat link download
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "data_pengeluaran.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Warna progress bar
@@ -166,7 +195,7 @@ export default function HomePage() {
             </select>
 
             <button
-              onClick={handleExport}
+              onClick={handleExportCSV}
               className="bg-green-500 dark:bg-gray-400 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
             >
               Export
@@ -204,7 +233,6 @@ export default function HomePage() {
 
           {/* List Pemasukan */}
           <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            {/* <IncomeList incomes={filteredIncomes} /> */}
             <IncomeList
               incomes={filteredIncomes}
               onEdit={(updatedIncome) => {
@@ -218,13 +246,12 @@ export default function HomePage() {
                 setIncomes((prev) => prev.filter((inc) => inc.id !== id));
               }}
             />
-
           </div>
 
           {/* List Pengeluaran */}
           <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             <ExpenseList
-              expenses={expenses} // kirim semua
+              expenses={expenses}
               month={month}
               filter={filter}
               onEdit={(updatedExpense) => {
