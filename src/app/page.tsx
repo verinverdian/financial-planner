@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { Eye, EyeOff } from "lucide-react";
 import type { Expense } from '@/types/expense';
 import type { Income } from '@/types/income';
 import Header from '@/components/Header';
@@ -18,6 +19,11 @@ export default function HomePage() {
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [filter, setFilter] = useState('');
   const [month, setMonth] = useState<string>(currentMonth); // default bulan ini
+  const [showAmount, setShowAmount] = useState(true);
+
+  const formatMoney = (amount: number) =>
+    showAmount ? `Rp ${amount.toLocaleString("id-ID")}` : "•••••••";
+
 
   // === Load dari localStorage ===
   useEffect(() => {
@@ -193,42 +199,68 @@ export default function HomePage() {
               <option value="Tagihan">Tagihan</option>
               <option value="Lainnya">Lainnya</option>
             </select>
-
-            <button
-              onClick={handleExportCSV}
-              className="bg-green-500 dark:bg-gray-400 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
-            >
-              Export
-            </button>
           </div>
         </div>
 
         {/* Bagian kanan */}
         <div className="w-full md:w-2/3 space-y-4">
           {/* Ringkasan */}
+          <div className="flex justify-end">
+            <button
+              onClick={handleExportCSV}
+              className="bg-green-500 dark:bg-gray-400 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+            >
+              Export ke CSV
+            </button>
+          </div>
           <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             <div className="flex justify-between mb-4 border-b border-dashed border-gray-400 pb-4">
-              <span className="text-xl font-bold">Total Pemasukan {month && `(${formatMonthYear(month)})`}</span>
-              <span className="text-xl font-bold">Rp {totalIncome.toLocaleString('id-ID')}</span>
+              <span className="text-xl font-bold">
+                Total Pemasukan {month && `(${formatMonthYear(month)})`}
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold">
+                  {formatMoney(totalIncome)}
+                </span>
+                <button
+                  onClick={() => setShowAmount((prev) => !prev)}
+                  className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  {showAmount ? <Eye size={20} /> : <EyeOff size={20} />}
+                </button>
+              </div>
             </div>
 
+            {/* Total Pengeluaran */}
             <div className="flex justify-between mb-4 text-red-500">
               <span className="text-xl font-bold">Total Pengeluaran</span>
-              <span className="text-xl font-bold">Rp {totalExpenses.toLocaleString('id-ID')}</span>
+              <span className="text-xl font-bold">
+                {formatMoney(totalExpenses)}
+              </span>
             </div>
+
+            {/* Progress Bar */}
             <div className="w-full h-4 bg-gray-200 rounded-full mb-2 overflow-hidden">
               <div
                 className={`h-4 rounded-full ${progressColor} transition-all duration-500`}
                 style={{ width: `${Math.min(percentage, 100)}%` }}
               />
             </div>
-            <p className="text-sm text-gray-500 mb-4">{percentage.toFixed(1)}% dari pemasukan</p>
+            <p className="text-sm text-gray-500 mb-4">
+              {percentage.toFixed(1)}% dari pemasukan
+            </p>
+
+            {/* Sisa Uang */}
             <div className="flex justify-between">
               <span className="text-xl font-bold text-green-600">Sisa Uang</span>
-              <span className={`text-xl font-bold ${remaining < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                Rp {remaining.toLocaleString('id-ID')}
+              <span
+                className={`text-xl font-bold ${remaining < 0 ? "text-red-600" : "text-green-600"
+                  }`}
+              >
+                {formatMoney(remaining)}
               </span>
             </div>
+
           </div>
 
           {/* List Pemasukan */}
