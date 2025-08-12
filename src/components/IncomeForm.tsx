@@ -3,9 +3,12 @@ import { useState } from 'react';
 import type { Income } from '@/types/income';
 
 export default function IncomeForm({ onAdd }: { onAdd: (income: Income) => void }) {
+  const today = new Date();
+  const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
   const [source, setSource] = useState('');
   const [amount, setAmount] = useState('');
-  const [month, setMonth] = useState('');
+  const [month, setMonth] = useState<string>(currentMonth); // default bulan ini
   const [note, setNote] = useState('');
 
   const formatNumber = (value: string) => {
@@ -49,7 +52,7 @@ export default function IncomeForm({ onAdd }: { onAdd: (income: Income) => void 
         placeholder="Sumber pemasukan"
         className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
       />
-    
+
       <input
         type="text"
         value={amount || '0'}
