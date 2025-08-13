@@ -37,7 +37,7 @@ export default function IncomeForm({ onAdd }: { onAdd: (income: Income) => void 
     onAdd(newIncome);
     setSource('');
     setAmount('');
-    setMonth('');
+    setMonth(currentMonth);
     setNote('');
   };
 

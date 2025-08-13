@@ -19,9 +19,13 @@ export default function IncomeList({
   const [editMonth, setEditMonth] = useState('');
   const [editNote, setEditNote] = useState('');
 
-  // State untuk modal konfirmasi
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+
+  // --- State untuk Load More ---
+  const [visibleCount, setVisibleCount] = useState(3);
 
   const confirmDelete = (id: string) => {
     setDeleteId(id);
@@ -54,9 +58,6 @@ export default function IncomeList({
     setEditNote(income.note || '');
   };
 
-  // state untuk modal simpan
-  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
-
   const saveEditLogic = () => {
     if (!editSource || !editAmount || !editMonth) {
       alert('Harap isi semua data yang wajib diisi.')
@@ -73,7 +74,6 @@ export default function IncomeList({
     setEditingId(null);
   };
 
-  // handler tombol simpan (hanya buka modal)
   const saveEdit = () => {
     setShowSaveConfirm(true);
   };
@@ -89,17 +89,16 @@ export default function IncomeList({
 
   const formatMonthYear = (monthStr: string) => {
     const date = new Date(monthStr);
-    const month = date.getMonth() + 1; // getMonth() 0-based, jadi +1
+    const month = date.getMonth() + 1;
     const year = date.getFullYear();
     return `${month.toString().padStart(2, '0')}-${year}`;
   };
-
 
   return (
     <div className="bg-white dark:bg-gray-800">
       <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
       <ul className="divide-y">
-        {incomes.map((income) => (
+        {incomes.slice(0, visibleCount).map((income) => (
           <li key={income.id} className="py-2 flex items-center justify-between">
             {editingId === income.id ? (
               <div className="flex flex-col gap-2 w-full">
@@ -163,7 +162,8 @@ export default function IncomeList({
                   </button>
                   <button
                     onClick={() => confirmDelete(income.id)}
-                    className="text-red-500 hover:text-red-700"                  >
+                    className="text-red-500 hover:text-red-700"
+                  >
                     <Trash2 size={18} />
                   </button>
                 </div>
@@ -172,6 +172,19 @@ export default function IncomeList({
           </li>
         ))}
       </ul>
+
+      {/* Tombol Load More */}
+      {visibleCount < incomes.length && (
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={() => setVisibleCount(prev => prev + 3)}
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm"
+          >
+            Load More
+          </button>
+        </div>
+      )}
+
       {/* Modal Konfirmasi */}
       <ConfirmModal
         isOpen={showConfirm}

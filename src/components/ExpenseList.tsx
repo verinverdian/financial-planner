@@ -122,7 +122,7 @@ const saveEdit = () => {
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800">
+        <div className="max-h-64 overflow-y-auto bg-white dark:bg-gray-800">
             <h2 className="text-lg font-bold mb-2">Daftar Pengeluaran</h2>
             <ul className="divide-y">
                 {displayedExpenses.map((expense) => (

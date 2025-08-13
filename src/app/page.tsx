@@ -10,6 +10,8 @@ import ExpenseList from '@/components/ExpenseList';
 import ExpenseChart from '@/components/ExpenseChart';
 import IncomeForm from '@/components/IncomeForm';
 import IncomeList from '@/components/IncomeList';
+import ExpenseComparison from '@/components/ExpenseComparison';
+import IncomeComparison from "@/components/IncomeComparison";
 
 export default function HomePage() {
   const today = new Date();
@@ -204,7 +206,7 @@ export default function HomePage() {
 
         {/* Bagian kanan */}
         <div className="w-full md:w-2/3 space-y-4">
-          {/* Ringkasan */}
+          {/* Export Data */}
           <div className="flex justify-end">
             <button
               onClick={handleExportCSV}
@@ -213,30 +215,42 @@ export default function HomePage() {
               Export ke CSV
             </button>
           </div>
+
+          {/* Ringkasan */}
           <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <div className="flex justify-between mb-4 border-b border-dashed border-gray-400 pb-4">
-              <span className="text-xl font-bold">
-                Total Pemasukan {month && `(${formatMonthYear(month)})`}
-              </span>
-              <div className="flex items-center gap-2">
+            <div className="mb-4 border-b border-dashed border-gray-400 pb-4">
+              {/* Baris atas: Judul + jumlah */}
+              <div className="flex justify-between items-center">
                 <span className="text-xl font-bold">
-                  {formatMoney(totalIncome)}
+                  Total Pemasukan {month && `(${formatMonthYear(month)})`}
                 </span>
-                <button
-                  onClick={() => setShowAmount((prev) => !prev)}
-                  className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                >
-                  {showAmount ? <Eye size={20} /> : <EyeOff size={20} />}
-                </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold">{formatMoney(totalIncome)}</span>
+                  <button
+                    onClick={() => setShowAmount((prev) => !prev)}
+                    className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  >
+                    {showAmount ? <Eye size={20} /> : <EyeOff size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Baris bawah: IncomeComparison */}
+              <div className="mt-1">
+                <IncomeComparison incomes={incomes} selectedMonth={month} />
               </div>
             </div>
 
             {/* Total Pengeluaran */}
-            <div className="flex justify-between mb-4 text-red-500">
+            <div className="flex justify-between mb-1 text-red-500">
               <span className="text-xl font-bold">Total Pengeluaran</span>
               <span className="text-xl font-bold">
                 {formatMoney(totalExpenses)}
               </span>
+            </div>
+            {/* Expense Comparison */}
+            <div className="pb-2">
+              <ExpenseComparison expenses={expenses} selectedMonth={month} />
             </div>
 
             {/* Progress Bar */}
@@ -252,7 +266,7 @@ export default function HomePage() {
 
             {/* Sisa Uang */}
             <div className="flex justify-between">
-              <span className="text-xl font-bold text-green-600">Sisa Uang</span>
+              <span className="text-xl font-bold text-green-600">Sisa Uang / Saldo Bersih</span>
               <span
                 className={`text-xl font-bold ${remaining < 0 ? "text-red-600" : "text-green-600"
                   }`}
@@ -260,7 +274,6 @@ export default function HomePage() {
                 {formatMoney(remaining)}
               </span>
             </div>
-
           </div>
 
           {/* List Pemasukan */}
