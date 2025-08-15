@@ -20,12 +20,14 @@ export default function HomePage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [filter, setFilter] = useState('');
-  const [month, setMonth] = useState<string>(currentMonth); // default bulan ini
+  // const [month, setMonth] = useState<string>(currentMonth); // default bulan ini
+  const [month, setMonth] = useState(''); // default bulan ini
   const [showAmount, setShowAmount] = useState(true);
+
+  const [filterMonth, setFilterMonth] = useState<string>(currentMonth); 
 
   const formatMoney = (amount: number) =>
     showAmount ? `Rp ${amount.toLocaleString("id-ID")}` : "•••••••";
-
 
   // === Load dari localStorage ===
   useEffect(() => {
@@ -42,6 +44,7 @@ export default function HomePage() {
       setMonth(currentMonth); // kalau belum ada, set bulan ini
     }
   }, [currentMonth]);
+
 
   // === Simpan ke localStorage ===
   useEffect(() => {
@@ -159,24 +162,13 @@ export default function HomePage() {
 
       <div className="p-4 pb-0 shadow-sm">
         <div className="px-4 py-3 leading-normal bg-green-100 dark:bg-gray-800 dark:border-gray-900 rounded-lg border-2 border-green-400">
-          <p>Halo 👋, selamat datang di perencana keuangan kamu!</p>
+          <p>Halo 👋, selamat datang di <span className="italic">tracking</span> keuangan kamu!</p>
         </div>
       </div>
 
       <div className="max-w-8xl mx-auto p-4 flex flex-col md:flex-row gap-4">
         {/* Bagian kiri */}
         <div className="w-full md:w-1/3 space-y-4">
-          {/* Pilih bulan */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <label className="block font-semibold mb-2 dark:text-white">Pilih Bulan</label>
-            <input
-              type="month"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            />
-          </div>
-
           {/* Form Pemasukan */}
           <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             <IncomeForm onAdd={handleAddIncome} />
@@ -206,14 +198,27 @@ export default function HomePage() {
 
         {/* Bagian kanan */}
         <div className="w-full md:w-2/3 space-y-4">
-          {/* Export Data */}
-          <div className="flex justify-end">
-            <button
-              onClick={handleExportCSV}
-              className="bg-green-500 dark:bg-gray-400 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
-            >
-              Export ke CSV
-            </button>
+          <div className="flex justify-between items-start">
+            {/* Pilih bulan */}
+            <div className="bg-white p-1 dark:bg-gray-800 rounded-2xl">
+              <label className="font-semibold p-4">Pilih Bulan:</label>
+              <input
+                type="month"
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                className="p-3 border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+            </div>
+
+            {/* Export Data */}
+            <div className="p-2 flex justify-end items-end">
+              <button
+                onClick={handleExportCSV}
+                className="bg-green-500 dark:bg-gray-400 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+              >
+                Export ke CSV
+              </button>
+            </div>
           </div>
 
           {/* Ringkasan */}
@@ -266,14 +271,22 @@ export default function HomePage() {
 
             {/* Sisa Uang */}
             <div className="flex justify-between">
-              <span className="text-xl font-bold text-green-600">Sisa Uang / Saldo Bersih</span>
-              <span
-                className={`text-xl font-bold ${remaining < 0 ? "text-red-600" : "text-green-600"
+              <span className={`text-xl font-bold ${remaining < 0 ? "text-red-500" : "text-green-600"
+                }`}>
+                {remaining < 0 ? "Hutang/Defisit" : "Sisa Uang/Saldo Bersih"}
+              </span>
+              < span
+                className={`text-xl font-bold ${remaining < 0 ? "text-red-500" : "text-green-600"
                   }`}
               >
-                {formatMoney(remaining)}
+                {formatMoney(Math.abs(remaining))}
               </span>
             </div>
+            {remaining < 0 && (
+              <div className="mt-2 text-sm text-red-500">
+                Hutang ini akan dibawa ke bulan berikutnya.
+              </div>
+            )}
           </div>
 
           {/* List Pemasukan */}

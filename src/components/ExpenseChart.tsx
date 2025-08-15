@@ -1,6 +1,8 @@
 'use client';
 
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 const COLORS: Record<string, string> = {
   Makanan: '#60a5fa',       // biru pastel
@@ -13,9 +15,9 @@ const COLORS: Record<string, string> = {
 export default function ExpenseChart({
   expenses,
 }: {
-  expenses: { name: string; amount: number; category: string }[];
+  expenses: { id: string; name: string; amount: number; category: string; date: string }[];
 }) {
-  // Gabungkan pengeluaran berdasarkan kategori
+  // ======== PIE CHART DATA ========
   const groupedData = Object.values(
     expenses.reduce((acc: any, curr) => {
       if (!acc[curr.category]) {
@@ -28,10 +30,25 @@ export default function ExpenseChart({
 
   const totalAmount = groupedData.reduce((sum: number, item: any) => sum + item.amount, 0);
 
-  return (
-    <div className="bg-white dark:bg-gray-800 min-h-64">
-      <h2 className="text-lg font-bold mb-2">Distribusi Pengeluaran per Kategori</h2>
+  // ======== LAST 7 DAYS BAR CHART DATA ========
+  const now = new Date();
+  const last7DaysData = [...Array(7)].map((_, i) => {
+    const d = new Date(now);
+    d.setDate(now.getDate() - (6 - i)); // urut dari hari terlama ke terbaru
+    const dateStr = d.toISOString().split('T')[0];
+    const totalForDay = expenses
+      .filter((exp) => exp.date.startsWith(dateStr))
+      .reduce((sum, e) => sum + e.amount, 0);
+    return {
+      date: format(d, 'dd MMM', { locale: id }),
+      amount: totalForDay,
+    };
+  });
 
+  return (
+    <div className="bg-white dark:bg-gray-800 min-h-64 p-4 rounded-lg shadow-sm">
+      {/* ===== PIE CHART ===== */}
+      <h2 className="text-lg font-bold mb-2">Distribusi Pengeluaran per Kategori</h2>
       {totalAmount > 0 ? (
         <div className="h-64">
           <ResponsiveContainer>
@@ -58,11 +75,10 @@ export default function ExpenseChart({
               <Tooltip
                 formatter={(value: number, name: string, props) => {
                   const percent = ((value / totalAmount) * 100).toFixed(1);
-                  const label = props.payload?.name || ''; // ambil nama kategori
+                  const label = props.payload?.name || '';
                   return [`${label} Rp ${value.toLocaleString('id-ID')} (${percent}%)`];
                 }}
               />
-
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -71,6 +87,22 @@ export default function ExpenseChart({
           <p className="text-gray-500 text-sm">Belum ada data untuk bulan ini.</p>
         </div>
       )}
+
+      {/* ===== BAR CHART 7 HARI ===== */}
+      <div className="mt-8">
+        <h3 className="text-md font-bold mb-2">Tren Pengeluaran 7 Hari Terakhir</h3>
+        <div className="h-64">
+          <ResponsiveContainer>
+            <BarChart data={last7DaysData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip formatter={(value: number) => `Rp ${value.toLocaleString('id-ID')}`} />
+              <Bar dataKey="amount" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }

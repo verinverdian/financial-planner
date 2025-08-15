@@ -1,6 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { Pencil, Trash2, Check, X } from 'lucide-react';
+import { Pencil, Trash2, Check, X, AlertTriangle } from 'lucide-react';
 import type { Expense } from '@/types/expense';
 import ConfirmModal from "./ConfirmModal"; // path disesuaikan
 
@@ -10,7 +10,8 @@ const COLORS: Record<string, string> = {
     Hiburan: '#fcd34d',       // kuning pastel
     Tagihan: '#fb923c',       // oranye pastel
     Lainnya: '#f87171',       // merah pastel
-  };
+    "Hutang bulan lalu": '#fca5a5', // merah muda khusus hutang
+};
 
 export default function ExpenseList({
     expenses,
@@ -68,33 +69,32 @@ export default function ExpenseList({
         setEditNote(expense.note || '');
     };
 
-// state untuk modal simpan
-const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+    // state untuk modal simpan
+    const [showSaveConfirm, setShowSaveConfirm] = useState(false);
 
-// logic asli save edit dipisah
-const saveEditLogic = () => {
-  if (!editName || !editAmount || !editDate) {
-    alert('Harap isi semua data yang wajib diisi.');
-    return;
-  }
-  const numericAmount = parseFloat(editAmount.replace(/\./g, '').replace(/,/g, ''));
-  onEdit({
-    id: editingId!,
-    name: editName,
-    amount: numericAmount,
-    category: editCategory,
-    date: editDate,
-    month,
-    note: editNote || undefined,
-  });
-  setEditingId(null);
-};
+    // logic asli save edit dipisah
+    const saveEditLogic = () => {
+        if (!editName || !editAmount || !editDate) {
+            alert('Harap isi semua data yang wajib diisi.');
+            return;
+        }
+        const numericAmount = parseFloat(editAmount.replace(/\./g, '').replace(/,/g, ''));
+        onEdit({
+            id: editingId!,
+            name: editName,
+            amount: numericAmount,
+            category: editCategory,
+            date: editDate,
+            month,
+            note: editNote || undefined,
+        });
+        setEditingId(null);
+    };
 
-// handler tombol simpan (hanya buka modal)
-const saveEdit = () => {
-  setShowSaveConfirm(true);
-};
-
+    // handler tombol simpan (hanya buka modal)
+    const saveEdit = () => {
+        setShowSaveConfirm(true);
+    };
 
     const displayedExpenses = useMemo(() => {
         return expenses.filter(
@@ -125,105 +125,115 @@ const saveEdit = () => {
         <div className="max-h-64 overflow-y-auto bg-white dark:bg-gray-800">
             <h2 className="text-lg font-bold mb-2">Daftar Pengeluaran</h2>
             <ul className="divide-y">
-                {displayedExpenses.map((expense) => (
-                    <li key={expense.id} className="py-2 flex items-center justify-between">
-                        {editingId === expense.id ? (
-                            <div className="flex flex-col gap-2 w-full">
-                                <p className="font-semibold">Edit Data</p>
-                                <input
-                                    type="text"
-                                    value={editName}
-                                    onChange={(e) => setEditName(e.target.value)}
-                                    className="border rounded px-2 py-1"
-                                />
-                                <input
-                                    type="text"
-                                    value={editAmount}
-                                    onChange={handleAmountChange}
-                                    className="border rounded px-2 py-1"
-                                />
-                                <select
-                                    value={editCategory}
-                                    onChange={(e) => setEditCategory(e.target.value)}
-                                    className="border rounded px-2 py-1"
-                                >
-                                    <option>Makanan</option>
-                                    <option>Transportasi</option>
-                                    <option>Hiburan</option>
-                                    <option>Tagihan</option>
-                                    <option>Lainnya</option>
-                                </select>
+                {displayedExpenses.map((expense) => {
+                    const isDebt = expense.category === "Hutang bulan lalu";
+                    return (
+                        <li
+                            key={expense.id}
+                            className={`py-2 flex items-center justify-between ${isDebt ? "bg-red-50 border border-red-300 rounded" : ""}`}
+                        >
+                            {editingId === expense.id ? (
+                                <div className="flex flex-col gap-2 w-full">
+                                    <p className="font-semibold">Edit Data</p>
+                                    <input
+                                        type="text"
+                                        value={editName}
+                                        onChange={(e) => setEditName(e.target.value)}
+                                        className="border rounded px-2 py-1"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={editAmount}
+                                        onChange={handleAmountChange}
+                                        className="border rounded px-2 py-1"
+                                    />
+                                    <select
+                                        value={editCategory}
+                                        onChange={(e) => setEditCategory(e.target.value)}
+                                        className="border rounded px-2 py-1"
+                                    >
+                                        <option>Makanan</option>
+                                        <option>Transportasi</option>
+                                        <option>Hiburan</option>
+                                        <option>Tagihan</option>
+                                        <option>Lainnya</option>
+                                        <option>Hutang bulan lalu</option>
+                                    </select>
 
-                                <input
-                                    type="date"
-                                    value={editDate}
-                                    onChange={(e) => setEditDate(e.target.value)}
-                                    className="border rounded px-2 py-1"
-                                />
-                                <textarea
-                                    value={editNote}
-                                    onChange={(e) => setEditNote(e.target.value)}
-                                    className="border rounded px-2 py-1"
-                                    placeholder="Catatan (opsional)"
-                                />
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={saveEdit}
-                                        className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded flex items-center gap-1"
-                                    >
-                                        <Check size={16} /> Simpan
-                                    </button>
-                                    <button
-                                        onClick={() => setEditingId(null)}
-                                        className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded flex items-center gap-1"
-                                    >
-                                        <X size={16} /> Batal
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <>
-                                <div>
-                                    <p className="font-semibold">{expense.name}</p>
-                                    <p className="text-sm text-gray-500">
-                                        Tgl. {formatDateToDayMonthYear(expense.date)}
-                                        {expense.note &&
-                                            ` • Note: ${expense.note.length > 30
-                                                ? expense.note.substring(0, 30) + '...'
-                                                : expense.note
-                                            }`} {" • "}
-                                        <span
-                                            className="p-1 leading-normal rounded border-2"
-                                            style={{
-                                                backgroundColor: `${COLORS[expense.category]}20`, // warna pastel transparan
-                                                borderColor: COLORS[expense.category],
-                                            }}
+                                    <input
+                                        type="date"
+                                        value={editDate}
+                                        onChange={(e) => setEditDate(e.target.value)}
+                                        className="border rounded px-2 py-1"
+                                    />
+                                    <textarea
+                                        value={editNote}
+                                        onChange={(e) => setEditNote(e.target.value)}
+                                        className="border rounded px-2 py-1"
+                                        placeholder="Catatan (opsional)"
+                                    />
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={saveEdit}
+                                            className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded flex items-center gap-1"
                                         >
-                                            {expense.category}
-                                        </span>
-                                    </p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <div className="font-semibold text-red-500">
-                                        Rp {expense.amount.toLocaleString('id-ID')}
+                                            <Check size={16} /> Simpan
+                                        </button>
+                                        <button
+                                            onClick={() => setEditingId(null)}
+                                            className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded flex items-center gap-1"
+                                        >
+                                            <X size={16} /> Batal
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={() => startEdit(expense)}
-                                        className="text-blue-500 hover:text-blue-700"
-                                    >
-                                        <Pencil size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => confirmDelete(expense.id)}
-                                        className="text-red-500 hover:text-red-700"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
                                 </div>
-                            </>
-                        )}
-                    </li>
-                ))}
+                            ) : (
+                                <>
+                                    <div>
+                                        <p className="font-semibold flex items-center gap-1">
+                                            {isDebt && <AlertTriangle size={16} className="text-red-500" />}
+                                            {expense.name}
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                            Tgl. {formatDateToDayMonthYear(expense.date)}
+                                            {expense.note &&
+                                                ` • Note: ${expense.note.length > 30
+                                                    ? expense.note.substring(0, 30) + '...'
+                                                    : expense.note
+                                                }`} {" • "}
+                                            <span
+                                                className="p-1 leading-normal rounded border-2"
+                                                style={{
+                                                    backgroundColor: `${COLORS[expense.category] || "#ccc"}20`,
+                                                    borderColor: COLORS[expense.category] || "#ccc",
+                                                }}
+                                            >
+                                                {expense.category}
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <div className={`font-semibold ${isDebt ? "text-red-600" : "text-red-500"}`}>
+                                            Rp {expense.amount.toLocaleString('id-ID')}
+                                        </div>
+                                        <button
+                                            onClick={() => startEdit(expense)}
+                                            className="text-blue-500 hover:text-blue-700"
+                                        >
+                                            <Pencil size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => confirmDelete(expense.id)}
+                                            className="text-red-500 hover:text-red-700"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </li>
+                    );
+                })}
             </ul>
 
             {/* Modal Konfirmasi */}

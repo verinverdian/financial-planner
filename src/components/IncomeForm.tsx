@@ -2,7 +2,13 @@
 import { useState } from 'react';
 import type { Income } from '@/types/income';
 
-export default function IncomeForm({ onAdd }: { onAdd: (income: Income) => void }) {
+export default function IncomeForm({
+  onAdd,
+  onMonthChange, // ➜ tambahkan prop baru untuk sinkron ke parent
+}: {
+  onAdd: (income: Income) => void;
+  onMonthChange?: (month: string) => void;
+}) {
   const today = new Date();
   const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 
@@ -19,6 +25,13 @@ export default function IncomeForm({ onAdd }: { onAdd: (income: Income) => void 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatNumber(e.target.value);
     setAmount(formatted);
+  };
+
+  const handleMonthChange = (value: string) => {
+    setMonth(value);
+    if (onMonthChange) {
+      onMonthChange(value); // sinkronkan ke parent
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -39,6 +52,7 @@ export default function IncomeForm({ onAdd }: { onAdd: (income: Income) => void 
     setAmount('');
     setMonth(currentMonth);
     setNote('');
+    if (onMonthChange) onMonthChange(currentMonth);
   };
 
   return (
@@ -64,7 +78,7 @@ export default function IncomeForm({ onAdd }: { onAdd: (income: Income) => void 
       <input
         type="month"
         value={month}
-        onChange={e => setMonth(e.target.value)}
+        onChange={e => handleMonthChange(e.target.value)}
         className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
       />
 
