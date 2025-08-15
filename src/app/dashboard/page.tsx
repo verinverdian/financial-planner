@@ -157,7 +157,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 dark:bg-gray-600">
+    <main className="min-h-screen bg-white dark:bg-gray-600">
       <Header />
 
       <div className="p-4 pb-0 shadow-sm">

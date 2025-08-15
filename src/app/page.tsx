@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Header from '@/components/Header';
 import { useEffect } from "react";
-import { Wallet, TrendingUp, BarChart } from "lucide-react";
+import { Wallet, TrendingUp, BarChart, PiggyBank, LineChart } from "lucide-react";
 
 export default function Home() {
   // Smooth scroll
@@ -21,44 +21,38 @@ export default function Home() {
         {/* Navbar */}
         <Header />
 
-        {/* Hero Section */}
-        <div
-          className="relative text-center px-8 py-16 min-h-[500px] flex items-center justify-center"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1605902711622-cfb43c4437d1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
+        <div className="relative">
+          {/* Layer blur (z-0) */}
+          <div className="absolute inset-0 bg-gradient-to-b from-green-100/70 to-white blur-3xl z-0"></div>
 
-          <div className="absolute inset-0 bg-gradient-to-b from-white/80 to-white/40"></div>
+          {/* Hero content (z-10) */}
+          <div
+            className="relative z-10 text-center px-8 py-16 min-h-[500px] flex items-center justify-center"
+            style={{
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1605902711622-cfb43c4437d1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          >
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-white/70 inline-block px-4 py-1 rounded-full text-sm mb-4">
+                Trusted by 50,000+ smart savers
+              </div>
 
-          <div className="relative z-10 max-w-2xl mx-auto">
-            <div className="bg-white/70 inline-block px-4 py-1 rounded-full text-sm mb-4">
-              Trusted by 50,000+ smart savers
-            </div>
+              <h1 className="text-4xl md:text-5xl font-bold text-green-800 mb-4">
+                <span className="bg-green-200 px-2 rounded-lg">Reconnect</span> With Your Finances
+              </h1>
+              <p className="text-gray-700 mb-6">
+                From tracking expenses to achieving big goals, discover a system
+                where your money works for you — and every decision feels right.
+              </p>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-green-800 mb-4">
-              Reconnect With Your Finances
-            </h1>
-            <p className="text-gray-700 mb-6">
-              From tracking expenses to achieving big goals, discover a system
-              where your money works for you — and every decision feels right.
-            </p>
-
-            <Link href="/dashboard">
-              <button className="bg-green-700 text-white px-6 py-3 rounded-full hover:bg-green-800">
-                Start Tracking
-              </button>
-            </Link>
-
-            {/* Logo Recognition */}
-            <div className="flex flex-wrap justify-center items-center gap-6 mt-10 opacity-80">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Forbes_logo.svg" alt="Forbes" className="h-6" />
-              <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/TechCrunch_logo.svg" alt="TechCrunch" className="h-6" />
-              <img src="https://upload.wikimedia.org/wikipedia/commons/5/52/The_New_York_Times_logo.svg" alt="NY Times" className="h-6" />
-              <img src="https://upload.wikimedia.org/wikipedia/commons/2/2e/WSJ_Logo.svg" alt="WSJ" className="h-6" />
+              <Link href="/dashboard">
+                <button className="bg-green-700 text-white px-6 py-3 rounded-full hover:bg-green-800">
+                  Start Tracking
+                </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -95,7 +89,7 @@ export default function Home() {
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="py-20 bg-gray-50">
+        <section id="pricing" className="py-20 bg-white">
           <div className="max-w-6xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-green-800 mb-8">Pricing</h2>
             <div className="grid md:grid-cols-3 gap-8">
@@ -150,7 +144,7 @@ export default function Home() {
         </section>
 
         {/* Footer */}
-        <footer className="py-6 bg-gray-100 text-center text-gray-500">
+        <footer className="py-6 bg-gray-100 text-center bg-white">
           &copy; {new Date().getFullYear()} FinanceTrack Co. All rights reserved.
         </footer>
       </section>
