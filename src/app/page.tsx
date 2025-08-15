@@ -1,338 +1,160 @@
+// app/page.jsx (homepage)
 'use client';
-
-import { useState, useEffect, useMemo } from 'react';
-import { Eye, EyeOff } from "lucide-react";
-import type { Expense } from '@/types/expense';
-import type { Income } from '@/types/income';
+import Link from "next/link";
+import Image from "next/image";
 import Header from '@/components/Header';
-import ExpenseForm from '@/components/ExpenseForm';
-import ExpenseList from '@/components/ExpenseList';
-import ExpenseChart from '@/components/ExpenseChart';
-import IncomeForm from '@/components/IncomeForm';
-import IncomeList from '@/components/IncomeList';
-import ExpenseComparison from '@/components/ExpenseComparison';
-import IncomeComparison from "@/components/IncomeComparison";
+import { useEffect } from "react";
+import { Wallet, TrendingUp, BarChart } from "lucide-react";
 
-export default function HomePage() {
-  const today = new Date();
-  const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [incomes, setIncomes] = useState<Income[]>([]);
-  const [filter, setFilter] = useState('');
-  // const [month, setMonth] = useState<string>(currentMonth); // default bulan ini
-  const [month, setMonth] = useState(''); // default bulan ini
-  const [showAmount, setShowAmount] = useState(true);
-
-  const [filterMonth, setFilterMonth] = useState<string>(currentMonth); 
-
-  const formatMoney = (amount: number) =>
-    showAmount ? `Rp ${amount.toLocaleString("id-ID")}` : "•••••••";
-
-  // === Load dari localStorage ===
+export default function Home() {
+  // Smooth scroll
   useEffect(() => {
-    const savedExpenses = localStorage.getItem('expenses');
-    if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
-
-    const savedIncomes = localStorage.getItem('incomes');
-    if (savedIncomes) setIncomes(JSON.parse(savedIncomes));
-
-    const savedMonth = localStorage.getItem('month');
-    if (savedMonth) {
-      setMonth(savedMonth);
-    } else {
-      setMonth(currentMonth); // kalau belum ada, set bulan ini
+    if (typeof window !== "undefined") {
+      document.documentElement.style.scrollBehavior = "smooth";
     }
-  }, [currentMonth]);
-
-
-  // === Simpan ke localStorage ===
-  useEffect(() => {
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-  }, [expenses]);
-
-  useEffect(() => {
-    localStorage.setItem('incomes', JSON.stringify(incomes));
-  }, [incomes]);
-
-  useEffect(() => {
-    localStorage.setItem('month', month);
-  }, [month]);
-
-  // === Handler Tambah Income ===
-  const handleAddIncome = (income: Income) => {
-    if (!income.amount || income.amount <= 0) {
-      alert('Nominal pemasukan harus lebih dari 0');
-      return;
-    }
-    if (!income.source) {
-      alert('Sumber pemasukan tidak boleh kosong');
-      return;
-    }
-    setIncomes(prev => [...prev, { ...income, month }]);
-  };
-
-  // === Handler Tambah Expense ===
-  const handleAddExpense = (expense: Expense) => {
-    if (!expense.amount || expense.amount <= 0) {
-      alert('Nominal pengeluaran harus lebih dari 0');
-      return;
-    }
-    if (!expense.category) {
-      alert('Kategori tidak boleh kosong');
-      return;
-    }
-    setExpenses(prev => [...prev, { ...expense, month }]);
-  };
-
-  // === Filter data per bulan & kategori ===
-  const filteredIncomes = useMemo(() => {
-    return incomes.filter(inc => inc.month === month);
-  }, [incomes, month]);
-
-  const filteredExpenses = useMemo(() => {
-    return expenses.filter(
-      exp =>
-        exp.month === month &&
-        (filter ? exp.category === filter : true)
-    );
-  }, [expenses, filter, month]);
-
-  // === Hitung total ===
-  const totalIncome = filteredIncomes.reduce((sum, inc) => sum + inc.amount, 0);
-  const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const remaining = totalIncome - totalExpenses;
-  const percentage = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
-
-  // === Export data ===
-  const handleExportCSV = () => {
-    if (!expenses || expenses.length === 0) {
-      alert("Tidak ada data untuk diexport");
-      return;
-    }
-
-    // Buat salinan data dengan id = nomor urut
-    const dataWithNumberId = expenses.map((item, index) => ({
-      ...item,
-      id: index + 1
-    }));
-
-    // Ambil header dari keys object pertama
-    const headers = Object.keys(dataWithNumberId[0]).join(",");
-
-    // Ambil isi data
-    const rows = dataWithNumberId
-      .map(obj => Object.values(obj)
-        .map(val => `"${val}"`) // Tambahkan tanda kutip agar aman untuk teks
-        .join(","))
-      .join("\n");
-
-    // Gabungkan header + data
-    const csvContent = headers + "\n" + rows;
-
-    // Buat file blob untuk diunduh
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-
-    // Buat link download
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "data_pengeluaran.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Warna progress bar
-  let progressColor = 'bg-green-500';
-  if (percentage >= 80) progressColor = 'bg-red-500';
-  else if (percentage >= 50) progressColor = 'bg-yellow-500';
-
-  // Format bulan-tahun
-  const formatMonthYear = (monthString: string) => {
-    if (!monthString) return '';
-    const [year, month] = monthString.split('-');
-    const date = new Date(Number(year), Number(month) - 1);
-    return date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-  };
+  }, []);
 
   return (
-    <main className="min-h-screen bg-gray-100 dark:bg-gray-600">
-      <Header />
+    <main className="bg-gray-50 flex flex-col items-center justify-center">
+      <section className="bg-white w-full overflow-hidden">
 
-      <div className="p-4 pb-0 shadow-sm">
-        <div className="px-4 py-3 leading-normal bg-green-100 dark:bg-gray-800 dark:border-gray-900 rounded-lg border-2 border-green-400">
-          <p>Halo 👋, selamat datang di <span className="italic">tracking</span> keuangan kamu!</p>
-        </div>
-      </div>
+        {/* Navbar */}
+        <Header />
 
-      <div className="max-w-8xl mx-auto p-4 flex flex-col md:flex-row gap-4">
-        {/* Bagian kiri */}
-        <div className="w-full md:w-1/3 space-y-4">
-          {/* Form Pemasukan */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <IncomeForm onAdd={handleAddIncome} />
-          </div>
+        {/* Hero Section */}
+        <div
+          className="relative text-center px-8 py-16 min-h-[500px] flex items-center justify-center"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1605902711622-cfb43c4437d1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
 
-          {/* Form Pengeluaran */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <ExpenseForm onAdd={handleAddExpense} />
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-b from-white/80 to-white/40"></div>
 
-          {/* Filter & Export */}
-          <div className="flex gap-2 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="w-full p-3 border border-gray-200 rounded-lg flex-1 focus:outline-none focus:ring-2 focus:ring-green-400"
-            >
-              <option value="">Semua Kategori</option>
-              <option value="Makanan">Makanan</option>
-              <option value="Transportasi">Transportasi</option>
-              <option value="Hiburan">Hiburan</option>
-              <option value="Tagihan">Tagihan</option>
-              <option value="Lainnya">Lainnya</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Bagian kanan */}
-        <div className="w-full md:w-2/3 space-y-4">
-          <div className="flex justify-between items-start">
-            {/* Pilih bulan */}
-            <div className="bg-white p-1 dark:bg-gray-800 rounded-2xl">
-              <label className="font-semibold p-4">Pilih Bulan:</label>
-              <input
-                type="month"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-                className="p-3 border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-              />
+          <div className="relative z-10 max-w-2xl mx-auto">
+            <div className="bg-white/70 inline-block px-4 py-1 rounded-full text-sm mb-4">
+              Trusted by 50,000+ smart savers
             </div>
 
-            {/* Export Data */}
-            <div className="p-2 flex justify-end items-end">
-              <button
-                onClick={handleExportCSV}
-                className="bg-green-500 dark:bg-gray-400 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
-              >
-                Export ke CSV
-              </button>
-            </div>
-          </div>
-
-          {/* Ringkasan */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <div className="mb-4 border-b border-dashed border-gray-400 pb-4">
-              {/* Baris atas: Judul + jumlah */}
-              <div className="flex justify-between items-center">
-                <span className="text-xl font-bold">
-                  Total Pemasukan {month && `(${formatMonthYear(month)})`}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold">{formatMoney(totalIncome)}</span>
-                  <button
-                    onClick={() => setShowAmount((prev) => !prev)}
-                    className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                  >
-                    {showAmount ? <Eye size={20} /> : <EyeOff size={20} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Baris bawah: IncomeComparison */}
-              <div className="mt-1">
-                <IncomeComparison incomes={incomes} selectedMonth={month} />
-              </div>
-            </div>
-
-            {/* Total Pengeluaran */}
-            <div className="flex justify-between mb-1 text-red-500">
-              <span className="text-xl font-bold">Total Pengeluaran</span>
-              <span className="text-xl font-bold">
-                {formatMoney(totalExpenses)}
-              </span>
-            </div>
-            {/* Expense Comparison */}
-            <div className="pb-2">
-              <ExpenseComparison expenses={expenses} selectedMonth={month} />
-            </div>
-
-            {/* Progress Bar */}
-            <div className="w-full h-4 bg-gray-200 rounded-full mb-2 overflow-hidden">
-              <div
-                className={`h-4 rounded-full ${progressColor} transition-all duration-500`}
-                style={{ width: `${Math.min(percentage, 100)}%` }}
-              />
-            </div>
-            <p className="text-sm text-gray-500 mb-4">
-              {percentage.toFixed(1)}% dari pemasukan
+            <h1 className="text-4xl md:text-5xl font-bold text-green-800 mb-4">
+              Reconnect With Your Finances
+            </h1>
+            <p className="text-gray-700 mb-6">
+              From tracking expenses to achieving big goals, discover a system
+              where your money works for you — and every decision feels right.
             </p>
 
-            {/* Sisa Uang */}
-            <div className="flex justify-between">
-              <span className={`text-xl font-bold ${remaining < 0 ? "text-red-500" : "text-green-600"
-                }`}>
-                {remaining < 0 ? "Hutang/Defisit" : "Sisa Uang/Saldo Bersih"}
-              </span>
-              < span
-                className={`text-xl font-bold ${remaining < 0 ? "text-red-500" : "text-green-600"
-                  }`}
-              >
-                {formatMoney(Math.abs(remaining))}
-              </span>
+            <Link href="/dashboard">
+              <button className="bg-green-700 text-white px-6 py-3 rounded-full hover:bg-green-800">
+                Start Tracking
+              </button>
+            </Link>
+
+            {/* Logo Recognition */}
+            <div className="flex flex-wrap justify-center items-center gap-6 mt-10 opacity-80">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Forbes_logo.svg" alt="Forbes" className="h-6" />
+              <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/TechCrunch_logo.svg" alt="TechCrunch" className="h-6" />
+              <img src="https://upload.wikimedia.org/wikipedia/commons/5/52/The_New_York_Times_logo.svg" alt="NY Times" className="h-6" />
+              <img src="https://upload.wikimedia.org/wikipedia/commons/2/2e/WSJ_Logo.svg" alt="WSJ" className="h-6" />
             </div>
-            {remaining < 0 && (
-              <div className="mt-2 text-sm text-red-500">
-                Hutang ini akan dibawa ke bulan berikutnya.
-              </div>
-            )}
-          </div>
-
-          {/* List Pemasukan */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <IncomeList
-              incomes={filteredIncomes}
-              onEdit={(updatedIncome) => {
-                setIncomes((prev) =>
-                  prev.map((inc) =>
-                    inc.id === updatedIncome.id ? updatedIncome : inc
-                  )
-                );
-              }}
-              onDelete={(id) => {
-                setIncomes((prev) => prev.filter((inc) => inc.id !== id));
-              }}
-            />
-          </div>
-
-          {/* List Pengeluaran */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <ExpenseList
-              expenses={expenses}
-              month={month}
-              filter={filter}
-              onEdit={(updatedExpense) => {
-                setExpenses((prev) =>
-                  prev.map((exp) =>
-                    exp.id === updatedExpense.id ? updatedExpense : exp
-                  )
-                );
-              }}
-              onDelete={(id) => {
-                setExpenses((prev) => prev.filter((exp) => exp.id !== id));
-              }}
-            />
-          </div>
-
-          {/* Grafik */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            {filteredExpenses.length >= 0 && (
-              <ExpenseChart expenses={filteredExpenses} />
-            )}
           </div>
         </div>
-      </div>
+
+        {/* Features Section */}
+        <section id="features" className="py-20 bg-white">
+          <div className="max-w-6xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-green-800 mb-8">Features</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+
+              {/* Feature 1 */}
+              <div className="p-6 bg-gray-50 rounded-lg shadow flex flex-col items-center">
+                <Wallet className="h-12 w-12 text-green-700 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Expense Tracking</h3>
+                <p className="text-gray-600">Easily track daily expenses and see where your money goes.</p>
+              </div>
+
+              {/* Feature 2 */}
+              <div className="p-6 bg-gray-50 rounded-lg shadow flex flex-col items-center">
+                <TrendingUp className="h-12 w-12 text-green-700 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Income Management</h3>
+                <p className="text-gray-600">Manage multiple income sources in one dashboard.</p>
+              </div>
+
+              {/* Feature 3 */}
+              <div className="p-6 bg-gray-50 rounded-lg shadow flex flex-col items-center">
+                <BarChart className="h-12 w-12 text-green-700 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Financial Reports</h3>
+                <p className="text-gray-600">Generate monthly reports to keep your finances on track.</p>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section id="pricing" className="py-20 bg-gray-50">
+          <div className="max-w-6xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-green-800 mb-8">Pricing</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="p-6 bg-white rounded-lg shadow">
+                <h3 className="text-xl font-semibold mb-2">Free</h3>
+                <p className="text-gray-600 mb-4">$0/month</p>
+                <ul className="text-gray-500 mb-6 space-y-1">
+                  <li>Basic expense tracking</li>
+                  <li>Limited reports</li>
+                </ul>
+                <button className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800">
+                  Choose Plan
+                </button>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow border-2 border-green-700">
+                <h3 className="text-xl font-semibold mb-2">Pro</h3>
+                <p className="text-gray-600 mb-4">$9.99/month</p>
+                <ul className="text-gray-500 mb-6 space-y-1">
+                  <li>Unlimited tracking</li>
+                  <li>Custom reports</li>
+                  <li>Priority support</li>
+                </ul>
+                <button className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800">
+                  Choose Plan
+                </button>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow">
+                <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
+                <p className="text-gray-600 mb-4">Custom</p>
+                <ul className="text-gray-500 mb-6 space-y-1">
+                  <li>All Pro features</li>
+                  <li>Dedicated account manager</li>
+                </ul>
+                <button className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800">
+                  Contact Us
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* About Section */}
+        <section id="about" className="py-20 bg-white">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-green-800 mb-8">About Us</h2>
+            <p className="text-gray-600">
+              FinanceTrack Co. is dedicated to helping individuals and businesses
+              achieve financial freedom. With intuitive tools and clear insights,
+              we make money management easy and effective.
+            </p>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="py-6 bg-gray-100 text-center text-gray-500">
+          &copy; {new Date().getFullYear()} FinanceTrack Co. All rights reserved.
+        </footer>
+      </section>
     </main>
   );
 }
+
