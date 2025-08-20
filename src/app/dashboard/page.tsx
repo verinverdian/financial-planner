@@ -12,6 +12,7 @@ import IncomeForm from '@/components/IncomeForm';
 import IncomeList from '@/components/IncomeList';
 import ExpenseComparison from '@/components/ExpenseComparison';
 import IncomeComparison from "@/components/IncomeComparison";
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function HomePage() {
   const today = new Date();
@@ -24,7 +25,7 @@ export default function HomePage() {
   const [month, setMonth] = useState(''); // default bulan ini
   const [showAmount, setShowAmount] = useState(true);
 
-  const [filterMonth, setFilterMonth] = useState<string>(currentMonth); 
+  const [filterMonth, setFilterMonth] = useState<string>(currentMonth);
 
   const formatMoney = (amount: number) =>
     showAmount ? `Rp ${amount.toLocaleString("id-ID")}` : "•••••••";
@@ -157,182 +158,191 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-white dark:bg-gray-600">
-      <Header />
+    <ProtectedRoute>
+      <head>
+        <title>Dashboard | Financial Tracking</title>
+        <meta
+          name="description"
+          content="Masuk ke aplikasi Financial Tracking untuk mengelola keuangan Anda."
+        />
+      </head>
+      <main className="min-h-screen bg-white dark:bg-gray-600">
+        <Header />
 
-      <div className="p-4 pb-0 shadow-sm">
-        <div className="px-4 py-3 leading-normal bg-green-100 dark:bg-gray-800 dark:border-gray-900 rounded-lg border-2 border-green-400">
-          <p>Halo 👋, selamat datang di <span className="italic">tracking</span> keuangan kamu!</p>
-        </div>
-      </div>
-
-      <div className="max-w-8xl mx-auto p-4 flex flex-col md:flex-row gap-4">
-        {/* Bagian kiri */}
-        <div className="w-full md:w-1/3 space-y-4">
-          {/* Form Pemasukan */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <IncomeForm onAdd={handleAddIncome} />
-          </div>
-
-          {/* Form Pengeluaran */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <ExpenseForm onAdd={handleAddExpense} />
-          </div>
-
-          {/* Filter & Export */}
-          <div className="flex gap-2 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="w-full p-3 border border-gray-200 rounded-lg flex-1 focus:outline-none focus:ring-2 focus:ring-green-400"
-            >
-              <option value="">Semua Kategori</option>
-              <option value="Makanan">Makanan</option>
-              <option value="Transportasi">Transportasi</option>
-              <option value="Hiburan">Hiburan</option>
-              <option value="Tagihan">Tagihan</option>
-              <option value="Lainnya">Lainnya</option>
-            </select>
+        <div className="p-4 pb-0 shadow-sm">
+          <div className="px-4 py-3 leading-normal bg-green-100 dark:bg-gray-800 dark:border-gray-900 rounded-lg border-2 border-green-400">
+            <p>Halo 👋, selamat datang di <span className="italic">tracking</span> keuangan kamu!</p>
           </div>
         </div>
 
-        {/* Bagian kanan */}
-        <div className="w-full md:w-2/3 space-y-4">
-          <div className="flex justify-between items-start">
-            {/* Pilih bulan */}
-            <div className="bg-white p-1 dark:bg-gray-800 rounded-2xl">
-              <label className="font-semibold p-4">Pilih Bulan:</label>
-              <input
-                type="month"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-                className="p-3 border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-              />
+        <div className="max-w-8xl mx-auto p-4 flex flex-col md:flex-row gap-4">
+          {/* Bagian kiri */}
+          <div className="w-full md:w-1/3 space-y-4">
+            {/* Form Pemasukan */}
+            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+              <IncomeForm onAdd={handleAddIncome} />
             </div>
 
-            {/* Export Data */}
-            <div className="p-2 flex justify-end items-end">
-              <button
-                onClick={handleExportCSV}
-                className="bg-green-500 dark:bg-gray-400 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+            {/* Form Pengeluaran */}
+            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+              <ExpenseForm onAdd={handleAddExpense} />
+            </div>
+
+            {/* Filter & Export */}
+            <div className="flex gap-2 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="w-full p-3 border border-gray-200 rounded-lg flex-1 focus:outline-none focus:ring-2 focus:ring-green-400"
               >
-                Export ke CSV
-              </button>
+                <option value="">Semua Kategori</option>
+                <option value="Makanan">Makanan</option>
+                <option value="Transportasi">Transportasi</option>
+                <option value="Hiburan">Hiburan</option>
+                <option value="Tagihan">Tagihan</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
             </div>
           </div>
 
-          {/* Ringkasan */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <div className="mb-4 border-b border-dashed border-gray-400 pb-4">
-              {/* Baris atas: Judul + jumlah */}
-              <div className="flex justify-between items-center">
-                <span className="text-xl font-bold">
-                  Total Pemasukan {month && `(${formatMonthYear(month)})`}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold">{formatMoney(totalIncome)}</span>
-                  <button
-                    onClick={() => setShowAmount((prev) => !prev)}
-                    className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                  >
-                    {showAmount ? <Eye size={20} /> : <EyeOff size={20} />}
-                  </button>
+          {/* Bagian kanan */}
+          <div className="w-full md:w-2/3 space-y-4">
+            <div className="flex justify-between items-start">
+              {/* Pilih bulan */}
+              <div className="bg-white p-1 dark:bg-gray-800 rounded-2xl">
+                <label className="font-semibold p-4">Pilih Bulan:</label>
+                <input
+                  type="month"
+                  value={month}
+                  onChange={(e) => setMonth(e.target.value)}
+                  className="p-3 border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                />
+              </div>
+
+              {/* Export Data */}
+              <div className="p-2 flex justify-end items-end">
+                <button
+                  onClick={handleExportCSV}
+                  className="bg-green-500 dark:bg-gray-400 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
+                >
+                  Export ke CSV
+                </button>
+              </div>
+            </div>
+
+            {/* Ringkasan */}
+            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+              <div className="mb-4 border-b border-dashed border-gray-400 pb-4">
+                {/* Baris atas: Judul + jumlah */}
+                <div className="flex justify-between items-center">
+                  <span className="text-xl font-bold">
+                    Total Pemasukan {month && `(${formatMonthYear(month)})`}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-bold">{formatMoney(totalIncome)}</span>
+                    <button
+                      onClick={() => setShowAmount((prev) => !prev)}
+                      className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                    >
+                      {showAmount ? <Eye size={20} /> : <EyeOff size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Baris bawah: IncomeComparison */}
+                <div className="mt-1">
+                  <IncomeComparison incomes={incomes} selectedMonth={month} />
                 </div>
               </div>
 
-              {/* Baris bawah: IncomeComparison */}
-              <div className="mt-1">
-                <IncomeComparison incomes={incomes} selectedMonth={month} />
+              {/* Total Pengeluaran */}
+              <div className="flex justify-between mb-1 text-red-500">
+                <span className="text-xl font-bold">Total Pengeluaran</span>
+                <span className="text-xl font-bold">
+                  {formatMoney(totalExpenses)}
+                </span>
               </div>
+              {/* Expense Comparison */}
+              <div className="pb-2">
+                <ExpenseComparison expenses={expenses} selectedMonth={month} />
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full h-4 bg-gray-200 rounded-full mb-2 overflow-hidden">
+                <div
+                  className={`h-4 rounded-full ${progressColor} transition-all duration-500`}
+                  style={{ width: `${Math.min(percentage, 100)}%` }}
+                />
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                {percentage.toFixed(1)}% dari pemasukan
+              </p>
+
+              {/* Sisa Uang */}
+              <div className="flex justify-between">
+                <span className={`text-xl font-bold ${remaining < 0 ? "text-red-500" : "text-green-600"
+                  }`}>
+                  {remaining < 0 ? "Hutang/Defisit" : "Sisa Uang/Saldo Bersih"}
+                </span>
+                < span
+                  className={`text-xl font-bold ${remaining < 0 ? "text-red-500" : "text-green-600"
+                    }`}
+                >
+                  {formatMoney(Math.abs(remaining))}
+                </span>
+              </div>
+              {remaining < 0 && (
+                <div className="mt-2 text-sm text-red-500">
+                  Hutang ini akan dibawa ke bulan berikutnya.
+                </div>
+              )}
             </div>
 
-            {/* Total Pengeluaran */}
-            <div className="flex justify-between mb-1 text-red-500">
-              <span className="text-xl font-bold">Total Pengeluaran</span>
-              <span className="text-xl font-bold">
-                {formatMoney(totalExpenses)}
-              </span>
-            </div>
-            {/* Expense Comparison */}
-            <div className="pb-2">
-              <ExpenseComparison expenses={expenses} selectedMonth={month} />
-            </div>
-
-            {/* Progress Bar */}
-            <div className="w-full h-4 bg-gray-200 rounded-full mb-2 overflow-hidden">
-              <div
-                className={`h-4 rounded-full ${progressColor} transition-all duration-500`}
-                style={{ width: `${Math.min(percentage, 100)}%` }}
+            {/* List Pemasukan */}
+            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+              <IncomeList
+                incomes={filteredIncomes}
+                onEdit={(updatedIncome) => {
+                  setIncomes((prev) =>
+                    prev.map((inc) =>
+                      inc.id === updatedIncome.id ? updatedIncome : inc
+                    )
+                  );
+                }}
+                onDelete={(id) => {
+                  setIncomes((prev) => prev.filter((inc) => inc.id !== id));
+                }}
               />
             </div>
-            <p className="text-sm text-gray-500 mb-4">
-              {percentage.toFixed(1)}% dari pemasukan
-            </p>
 
-            {/* Sisa Uang */}
-            <div className="flex justify-between">
-              <span className={`text-xl font-bold ${remaining < 0 ? "text-red-500" : "text-green-600"
-                }`}>
-                {remaining < 0 ? "Hutang/Defisit" : "Sisa Uang/Saldo Bersih"}
-              </span>
-              < span
-                className={`text-xl font-bold ${remaining < 0 ? "text-red-500" : "text-green-600"
-                  }`}
-              >
-                {formatMoney(Math.abs(remaining))}
-              </span>
+            {/* List Pengeluaran */}
+            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+              <ExpenseList
+                expenses={expenses}
+                month={month}
+                filter={filter}
+                onEdit={(updatedExpense) => {
+                  setExpenses((prev) =>
+                    prev.map((exp) =>
+                      exp.id === updatedExpense.id ? updatedExpense : exp
+                    )
+                  );
+                }}
+                onDelete={(id) => {
+                  setExpenses((prev) => prev.filter((exp) => exp.id !== id));
+                }}
+              />
             </div>
-            {remaining < 0 && (
-              <div className="mt-2 text-sm text-red-500">
-                Hutang ini akan dibawa ke bulan berikutnya.
-              </div>
-            )}
-          </div>
 
-          {/* List Pemasukan */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <IncomeList
-              incomes={filteredIncomes}
-              onEdit={(updatedIncome) => {
-                setIncomes((prev) =>
-                  prev.map((inc) =>
-                    inc.id === updatedIncome.id ? updatedIncome : inc
-                  )
-                );
-              }}
-              onDelete={(id) => {
-                setIncomes((prev) => prev.filter((inc) => inc.id !== id));
-              }}
-            />
-          </div>
-
-          {/* List Pengeluaran */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <ExpenseList
-              expenses={expenses}
-              month={month}
-              filter={filter}
-              onEdit={(updatedExpense) => {
-                setExpenses((prev) =>
-                  prev.map((exp) =>
-                    exp.id === updatedExpense.id ? updatedExpense : exp
-                  )
-                );
-              }}
-              onDelete={(id) => {
-                setExpenses((prev) => prev.filter((exp) => exp.id !== id));
-              }}
-            />
-          </div>
-
-          {/* Grafik */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            {filteredExpenses.length >= 0 && (
-              <ExpenseChart expenses={filteredExpenses} />
-            )}
+            {/* Grafik */}
+            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+              {filteredExpenses.length >= 0 && (
+                <ExpenseChart expenses={filteredExpenses} />
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </ProtectedRoute>
   );
 }

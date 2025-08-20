@@ -1,5 +1,6 @@
 // app/page.jsx (homepage)
 'use client';
+
 import Link from "next/link";
 import Image from "next/image";
 import Header from '@/components/Header';
@@ -48,7 +49,7 @@ export default function Home() {
                 where your money works for you — and every decision feels right.
               </p>
 
-              <Link href="/dashboard">
+              <Link href="/auth/login">
                 <button className="bg-green-700 text-white px-6 py-3 rounded-full hover:bg-green-800">
                   Start Tracking
                 </button>
