@@ -1,183 +1,155 @@
+// app/page.jsx (homepage)
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import type { Expense } from '@/types/expense';
+import Link from "next/link";
+import Image from "next/image";
 import Header from '@/components/Header';
-import ExpenseForm from '@/components/ExpenseForm';
-import ExpenseList from '@/components/ExpenseList';
-import ExpenseChart from '@/components/ExpenseChart';
+import { useEffect } from "react";
+import { Wallet, TrendingUp, BarChart, PiggyBank, LineChart } from "lucide-react";
 
-export default function HomePage() {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [filter, setFilter] = useState('');
-  const [income, setIncome] = useState<number>(0);
-
-  // Load data dari localStorage
+export default function Home() {
+  // Smooth scroll
   useEffect(() => {
-    const savedExpenses = localStorage.getItem('expenses');
-    if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
-
-    const savedIncome = localStorage.getItem('income');
-    if (savedIncome) setIncome(Number(savedIncome));
+    if (typeof window !== "undefined") {
+      document.documentElement.style.scrollBehavior = "smooth";
+    }
   }, []);
 
-  // Simpan data ke localStorage
-  useEffect(() => {
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-  }, [expenses]);
-
-  useEffect(() => {
-    localStorage.setItem('income', income.toString());
-  }, [income]);
-
-  const handleAddExpense = (expense: Expense) => {
-    setExpenses(prev => [...prev, expense]);
-  };
-
-  const handleExport = () => {
-    const blob = new Blob([JSON.stringify(expenses, null, 2)], {
-      type: 'application/json',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'expenses.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const filteredExpenses = useMemo(() => {
-    if (!filter) return expenses;
-    return expenses.filter(exp => exp.category === filter);
-  }, [expenses, filter]);
-
-  const total = useMemo(
-    () => filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0),
-    [filteredExpenses]
-  );
-
-  const remaining = income - total;
-  const percentage = income > 0 ? (total / income) * 100 : 0;
-
-  let progressColor = 'bg-green-500';
-  if (percentage >= 80) progressColor = 'bg-red-500';
-  else if (percentage >= 50) progressColor = 'bg-yellow-500';
-
-  // Format angka input gaji
-  const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\./g, '');
-    if (!isNaN(Number(raw))) {
-      setIncome(Number(raw));
-    }
-  };
-
   return (
-    <main className="min-h-screen bg-gray-100">
-      <Header />
+    <main className="bg-gray-50 flex flex-col items-center justify-center">
+      <section className="bg-white w-full overflow-hidden">
 
-      <div className="p-4 pb-0">
-        <div className="px-4 py-3 leading-normal bg-green-100 rounded-lg" role="alert">
-          <p>Hello, welcome to your financial planner 👋</p>
-        </div>
-      </div>
+        {/* Navbar */}
+        <Header />
 
-      <div className="max-w-8xl mx-auto p-4 flex flex-col md:flex-row gap-4">
-        {/* Bagian kiri */}
-        <div className="w-full md:w-1/3 space-y-4">
-          {/* Input pemasukan */}
-          <div className="p-6 bg-white rounded-2xl shadow-sm">
-            <label className="block mb-2 font-semibold text-green-600 text-lg">Pemasukan / Gaji</label>
-            <input
-              type="text"
-              value={income ? income.toLocaleString('id-ID') : '0'}
-              onChange={handleIncomeChange}
-              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Masukkan jumlah pemasukan"
-            />
-          </div>
+        <div className="relative">
+          {/* Layer blur (z-0) */}
+          <div className="absolute inset-0 bg-gradient-to-b from-green-100/70 to-white blur-3xl z-0"></div>
 
-          <div className="p-6 bg-white rounded-2xl shadow-sm">
-            <ExpenseForm onAdd={handleAddExpense} />
-          </div>
+          {/* Hero content (z-10) */}
+          <div
+            className="relative z-10 text-center px-8 py-16 min-h-[500px] flex items-center justify-center"
+            style={{
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1605902711622-cfb43c4437d1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          >
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-white/70 inline-block px-4 py-1 rounded-full text-sm mb-4">
+                Trusted by 50,000+ smart savers
+              </div>
 
-          <div className="flex gap-2 p-6 bg-white rounded-2xl shadow-sm">
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="w-full p-3 border border-gray-200 rounded-lg flex-1 focus:outline-none focus:ring-2 focus:ring-green-400"
-            >
-              <option value="">Semua Kategori</option>
-              <option value="Makanan">Makanan</option>
-              <option value="Transportasi">Transportasi</option>
-              <option value="Hiburan">Hiburan</option>
-              <option value="Tagihan">Tagihan</option>
-              <option value="Lainnya">Lainnya</option>
-            </select>
+              <h1 className="text-4xl md:text-5xl font-bold text-green-800 mb-4">
+                <span className="bg-green-200 px-2 rounded-lg">Reconnect</span> With Your Finances
+              </h1>
+              <p className="text-gray-700 mb-6">
+                From tracking expenses to achieving big goals, discover a system
+                where your money works for you — and every decision feels right.
+              </p>
 
-            <button
-              onClick={handleExport}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
-            >
-              Export
-            </button>
+              <Link href="/auth/login">
+                <button className="bg-green-700 text-white px-6 py-3 rounded-full hover:bg-green-800">
+                  Start Tracking
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
 
-        {/* Bagian kanan */}
-        <div className="w-full md:w-2/3 space-y-4">
-          {/* Bagian Total & Sisa */}
-          <div className="p-6 bg-white rounded-2xl shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-2xl font-bold">Total Pemasukan</span>
-              <span className="text-2xl font-bold">
-                Rp {income.toLocaleString('id-ID')}
-              </span>
-            </div>
+        {/* Features Section */}
+        <section id="features" className="py-20 bg-white">
+          <div className="max-w-6xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-green-800 mb-8">Features</h2>
+            <div className="grid md:grid-cols-3 gap-8">
 
-            {/* Garis pemisah putus-putus */}
-            <hr className="border-t border-gray-300 border-dashed mb-4" />
+              {/* Feature 1 */}
+              <div className="p-6 bg-gray-50 rounded-lg shadow flex flex-col items-center">
+                <Wallet className="h-12 w-12 text-green-700 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Expense Tracking</h3>
+                <p className="text-gray-600">Easily track daily expenses and see where your money goes.</p>
+              </div>
 
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-2xl font-bold text-red-500">Total Pengeluaran</span>
-              <span className="text-2xl font-bold">
-                Rp {total.toLocaleString('id-ID')}
-              </span>
-            </div>
+              {/* Feature 2 */}
+              <div className="p-6 bg-gray-50 rounded-lg shadow flex flex-col items-center">
+                <TrendingUp className="h-12 w-12 text-green-700 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Income Management</h3>
+                <p className="text-gray-600">Manage multiple income sources in one dashboard.</p>
+              </div>
 
-            {/* Progress Bar */}
-            <div className="w-full h-4 bg-gray-200 rounded-full mb-2 overflow-hidden">
-              <div
-                className={`h-4 rounded-full ${progressColor} transition-all duration-500 ease-out`}
-                style={{ width: `${Math.min(percentage, 100)}%` }}
-              ></div>
+              {/* Feature 3 */}
+              <div className="p-6 bg-gray-50 rounded-lg shadow flex flex-col items-center">
+                <BarChart className="h-12 w-12 text-green-700 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Financial Reports</h3>
+                <p className="text-gray-600">Generate monthly reports to keep your finances on track.</p>
+              </div>
+
             </div>
-            <p className="text-sm text-gray-500 mb-4">
-              {percentage.toFixed(1)}% dari pemasukan
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section id="pricing" className="py-20 bg-white">
+          <div className="max-w-6xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-green-800 mb-8">Pricing</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="p-6 bg-white rounded-lg shadow">
+                <h3 className="text-xl font-semibold mb-2">Free</h3>
+                <p className="text-gray-600 mb-4">$0/month</p>
+                <ul className="text-gray-500 mb-6 space-y-1">
+                  <li>Basic expense tracking</li>
+                  <li>Limited reports</li>
+                </ul>
+                <button className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800">
+                  Choose Plan
+                </button>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow border-2 border-green-700">
+                <h3 className="text-xl font-semibold mb-2">Pro</h3>
+                <p className="text-gray-600 mb-4">$9.99/month</p>
+                <ul className="text-gray-500 mb-6 space-y-1">
+                  <li>Unlimited tracking</li>
+                  <li>Custom reports</li>
+                  <li>Priority support</li>
+                </ul>
+                <button className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800">
+                  Choose Plan
+                </button>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow">
+                <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
+                <p className="text-gray-600 mb-4">Custom</p>
+                <ul className="text-gray-500 mb-6 space-y-1">
+                  <li>All Pro features</li>
+                  <li>Dedicated account manager</li>
+                </ul>
+                <button className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800">
+                  Contact Us
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* About Section */}
+        <section id="about" className="py-20 bg-white">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-green-800 mb-8">About Us</h2>
+            <p className="text-gray-600">
+              FinanceTrack Co. is dedicated to helping individuals and businesses
+              achieve financial freedom. With intuitive tools and clear insights,
+              we make money management easy and effective.
             </p>
-
-            <div className="flex justify-between items-center">
-              <span className="text-2xl font-bold text-green-600">Sisa Uang</span>
-              <span
-                className={`text-2xl font-bold ${remaining < 0 ? 'text-red-600' : 'text-green-600'
-                  }`}
-              >
-                Rp {remaining.toLocaleString('id-ID')}
-              </span>
-            </div>
           </div>
+        </section>
 
-          <div className="p-6 bg-white rounded-2xl shadow-sm">
-            <ExpenseList expenses={filteredExpenses} />
-          </div>
-
-          {filteredExpenses.length > 0 && (
-            <div className="p-6 bg-white rounded-2xl shadow-sm">
-              <ExpenseChart expenses={filteredExpenses} />
-            </div>
-          )}
-        </div>
-      </div>
-
+        {/* Footer */}
+        <footer className="py-6 bg-gray-100 text-center bg-white">
+          &copy; {new Date().getFullYear()} FinanceTrack Co. All rights reserved.
+        </footer>
+      </section>
     </main>
   );
 }
+
