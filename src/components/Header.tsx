@@ -38,10 +38,10 @@ export default function Header() {
       </Link>
       
       <div className="hidden md:flex space-x-6 text-gray-700">
-        <a href="/" className="hover:text-green-700">Home</a>
-        <a href="/#features" className="hover:text-green-700">Features</a>
-        <a href="/#pricing" className="hover:text-green-700">Pricing</a>
-        <a href="/#about" className="hover:text-green-700">About</a>
+        <Link href="/" className="hover:text-green-700">Home</Link>
+        <Link href="/#features" className="hover:text-green-700">Features</Link>
+        <Link href="/#pricing" className="hover:text-green-700">Pricing</Link>
+        <Link href="/#about" className="hover:text-green-700">About</Link>
       </div>
       
       <div className="flex justify-end">

@@ -40,11 +40,10 @@ export default function IncomeForm({
 
     const numericAmount = parseFloat(amount.replace(/\./g, ''));
     const newIncome: Income = {
-      id: crypto.randomUUID(),
       source,
       amount: numericAmount,
-      month,
-      note: note || undefined,
+      month_year: month,
+      notes: note || undefined,
     };
 
     onAdd(newIncome);
