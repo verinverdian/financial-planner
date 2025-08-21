@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AuthForm({ type }: { type: 'login' | 'signup' }) {
   const router = useRouter();
@@ -163,9 +164,11 @@ export default function AuthForm({ type }: { type: 'login' | 'signup' }) {
         onClick={handleGoogleLogin}
         className="w-full flex items-center justify-center gap-2 border py-2 rounded hover:bg-gray-100"
       >
-        <img
+        <Image
           src="https://www.svgrepo.com/show/475656/google-color.svg"
           alt="Google"
+          width={20}
+          height={20}
           className="w-5 h-5"
         />
         Continue with Google
