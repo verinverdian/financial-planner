@@ -1,9 +1,21 @@
 'use client';
 
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
+// Warna kategori
 const COLORS: Record<string, string> = {
   Makanan: '#60a5fa',       // biru pastel
   Transportasi: '#34d399',  // hijau pastel
@@ -12,27 +24,49 @@ const COLORS: Record<string, string> = {
   Lainnya: '#f87171',       // merah pastel
 };
 
-export default function ExpenseChart({
-  expenses,
-}: {
-  expenses: { id: string; name: string; amount: number; category: string; date: string }[];
-}) {
+// Tipe data pengeluaran
+interface Expense {
+  id: string;
+  name: string;
+  amount: number;
+  category: string;
+  date: string;
+}
+
+// Tipe untuk data Pie Chart
+interface GroupedData {
+  name: string;
+  amount: number;
+  category: string;
+}
+
+// Tipe untuk data Bar Chart
+interface DailyData {
+  date: string;
+  amount: number;
+}
+
+export default function ExpenseChart({ expenses }: { expenses: Expense[] }) {
   // ======== PIE CHART DATA ========
-  const groupedData = Object.values(
-    expenses.reduce((acc: any, curr) => {
+  const groupedData: GroupedData[] = Object.values(
+    expenses.reduce<Record<string, GroupedData>>((acc, curr) => {
       if (!acc[curr.category]) {
-        acc[curr.category] = { name: curr.category, amount: 0, category: curr.category };
+        acc[curr.category] = {
+          name: curr.category,
+          amount: 0,
+          category: curr.category,
+        };
       }
       acc[curr.category].amount += curr.amount;
       return acc;
     }, {})
   );
 
-  const totalAmount = groupedData.reduce((sum: number, item: any) => sum + item.amount, 0);
+  const totalAmount = groupedData.reduce((sum, item) => sum + item.amount, 0);
 
   // ======== LAST 7 DAYS BAR CHART DATA ========
   const now = new Date();
-  const last7DaysData = [...Array(7)].map((_, i) => {
+  const last7DaysData: DailyData[] = [...Array(7)].map((_, i) => {
     const d = new Date(now);
     d.setDate(now.getDate() - (6 - i)); // urut dari hari terlama ke terbaru
     const dateStr = d.toISOString().split('T')[0];
@@ -65,7 +99,7 @@ export default function ExpenseChart({
                   return `${name} (${percent}%)`;
                 }}
               >
-                {groupedData.map((entry: any, index) => (
+                {groupedData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={COLORS[entry.category] || '#ccc'}
@@ -73,7 +107,7 @@ export default function ExpenseChart({
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number, name: string, props) => {
+                formatter={(value: number, name, props: any) => {
                   const percent = ((value / totalAmount) * 100).toFixed(1);
                   const label = props.payload?.name || '';
                   return [`${label} Rp ${value.toLocaleString('id-ID')} (${percent}%)`];
@@ -97,7 +131,11 @@ export default function ExpenseChart({
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />
-              <Tooltip formatter={(value: number) => `Rp ${value.toLocaleString('id-ID')}`} />
+              <Tooltip
+                formatter={(value: number) =>
+                  `Rp ${value.toLocaleString('id-ID')}`
+                }
+              />
               <Bar dataKey="amount" fill="#4f46e5" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
