@@ -1,21 +1,22 @@
 'use client';
-import { useState } from 'react';
-import type { Income } from '@/types/income';
 
-export default function IncomeForm({
-  onAdd,
-  onMonthChange, // ➜ tambahkan prop baru untuk sinkron ke parent
-}: {
-  onAdd: (income: Income) => void;
-  onMonthChange?: (month: string) => void;
-}) {
-  const today = new Date();
-  const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+import { useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { Income } from '@/types/income';
+
+interface IncomeFormProps {
+  onAdded: (income: Income) => void;
+  userId: string; // dari Dashboard
+}
+
+export default function IncomeForm({ onAdded, userId }: IncomeFormProps) {
+  const supabase = createClientComponentClient();
 
   const [source, setSource] = useState('');
   const [amount, setAmount] = useState('');
-  const [month, setMonth] = useState<string>(currentMonth); // default bulan ini
-  const [note, setNote] = useState('');
+  const [monthYear, setMonthYear] = useState('');
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const formatNumber = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
@@ -27,77 +28,97 @@ export default function IncomeForm({
     setAmount(formatted);
   };
 
-  const handleMonthChange = (value: string) => {
-    setMonth(value);
-    if (onMonthChange) {
-      onMonthChange(value); // sinkronkan ke parent
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!source || !amount || !monthYear) return;
+
+    try {
+      setLoading(true);
+
+      const formattedMonthYear = monthYear.slice(0, 7);
+      const numericAmount = parseFloat(amount.replace(/\./g, ''));
+
+      const { data, error } = await supabase
+        .from('incomes')
+        .insert([
+          {
+            user_id: userId,
+            source,
+            amount: numericAmount,
+            month_year: formattedMonthYear,
+            notes: notes || null,
+          },
+        ])
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      onAdded(data as Income);
+
+      setSource('');
+      setAmount('');
+      setMonthYear('');
+      setNotes('');
+    } catch (err: any) {
+      console.error('Error adding income:', err.message);
+      alert('Gagal menambahkan pemasukan');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!source || !amount || !month) return;
-
-    const numericAmount = parseFloat(amount.replace(/\./g, ''));
-    const newIncome: Income = {
-      source,
-      amount: numericAmount,
-      month_year: month,
-      notes: note || undefined,
-    };
-
-    onAdd(newIncome);
-    setSource('');
-    setAmount('');
-    setMonth(currentMonth);
-    setNote('');
-    if (onMonthChange) onMonthChange(currentMonth);
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 mb-4 flex flex-col gap-2">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white dark:bg-gray-800 mb-4 flex flex-col gap-2"
+    >
       <label className="text-lg font-bold mb-2">Pemasukan</label>
 
       <input
         type="text"
-        value={source}
-        onChange={e => setSource(e.target.value)}
         placeholder="Sumber pemasukan"
+        value={source}
+        onChange={(e) => setSource(e.target.value)}
         className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+        required
       />
 
       <input
         type="text"
-        value={amount || '0'}
-        onChange={handleAmountChange}
+        inputMode="numeric"
         placeholder="Jumlah"
+        value={amount}
+        onChange={handleAmountChange}
         className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+        required
       />
 
       <input
         type="month"
-        value={month}
-        onChange={e => handleMonthChange(e.target.value)}
+        value={monthYear}
+        onChange={(e) => setMonthYear(e.target.value)}
         className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+        required
       />
 
       <textarea
-        value={note}
-        onChange={e => setNote(e.target.value)}
         placeholder="Catatan (opsional)"
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
         className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
       />
 
       <button
         type="submit"
-        disabled={!source || !amount || amount === '0' || !month}
-        className={`text-lg text-white px-4 py-2 rounded-lg transition 
-          ${!source || !amount || amount === '0' || !month
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-green-500 hover:bg-green-600'
-          }`}
+        disabled={!source || !amount || amount === '0' || !monthYear || loading}
+        className={`text-md text-white px-4 py-2 rounded-lg transition ${
+          !source || !amount || amount === '0' || !monthYear || loading
+            ? 'bg-gray-400'
+            : 'bg-green-600 hover:bg-green-700'
+        }`}
       >
-        Tambah
+        {loading ? 'Menyimpan...' : 'Tambah'}
       </button>
     </form>
   );

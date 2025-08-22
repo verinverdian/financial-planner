@@ -18,6 +18,7 @@ export default function DashboardHeader() {
         setUserName(user.user_metadata.full_name);
       } else {
         setUserName(user?.email ?? "User");
+        console.log(user)
       }
     };
 
