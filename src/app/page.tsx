@@ -1,19 +1,29 @@
-// app/page.jsx (homepage)
 'use client';
 
-import Link from "next/link";
 import Image from "next/image";
 import Header from '@/components/Header';
-import { useEffect } from "react";
-import { Wallet, TrendingUp, BarChart, PiggyBank, LineChart } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter } from 'next/navigation'; // ✅ pastikan ini
+import { Wallet, TrendingUp, BarChart } from "lucide-react";
+import { supabase } from '@/lib/supabaseClient';
 
 export default function Home() {
-  // Smooth scroll
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.documentElement.style.scrollBehavior = "smooth";
-    }
-  }, []);
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  const handleStartTracking = () => {
+    setLoading(true);
+    setTimeout(async () => {
+      const { data } = await supabase.auth.getSession();
+      setLoading(false);
+
+      if (data.session) {
+        router.replace('/dashboard');
+      } else {
+        router.replace('/auth/login');
+      }
+    }, 2000); // delay 2 detik
+  };
 
   return (
     <main className="bg-gray-50 flex flex-col items-center justify-center">
@@ -49,11 +59,41 @@ export default function Home() {
                 where your money works for you — and every decision feels right.
               </p>
 
-              <Link href="/auth/login">
-                <button className="bg-green-700 text-white px-6 py-3 rounded-full hover:bg-green-800">
-                  Start Tracking
-                </button>
-              </Link>
+              {/* Start Tracking Button */}
+              <button
+                onClick={handleStartTracking}
+                disabled={loading}
+                className={`relative inline-flex items-center px-8 py-3 rounded-full text-white font-semibold transition-all duration-300
+                  ${loading ? 'bg-green-600 opacity-70 cursor-not-allowed' : 'bg-green-700 hover:bg-green-800'}
+                `}
+              >
+                {loading && (
+                  <span className="absolute left-4">
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
+                    </svg>
+                  </span>
+                )}
+                {loading ? 'Checking...' : 'Start Tracking'}
+              </button>
+
             </div>
           </div>
         </div>
@@ -63,28 +103,21 @@ export default function Home() {
           <div className="max-w-6xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-green-800 mb-8">Features</h2>
             <div className="grid md:grid-cols-3 gap-8">
-
-              {/* Feature 1 */}
               <div className="p-6 bg-gray-50 rounded-lg shadow flex flex-col items-center">
                 <Wallet className="h-12 w-12 text-green-700 mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Expense Tracking</h3>
                 <p className="text-gray-600">Easily track daily expenses and see where your money goes.</p>
               </div>
-
-              {/* Feature 2 */}
               <div className="p-6 bg-gray-50 rounded-lg shadow flex flex-col items-center">
                 <TrendingUp className="h-12 w-12 text-green-700 mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Income Management</h3>
                 <p className="text-gray-600">Manage multiple income sources in one dashboard.</p>
               </div>
-
-              {/* Feature 3 */}
               <div className="p-6 bg-gray-50 rounded-lg shadow flex flex-col items-center">
                 <BarChart className="h-12 w-12 text-green-700 mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Financial Reports</h3>
                 <p className="text-gray-600">Generate monthly reports to keep your finances on track.</p>
               </div>
-
             </div>
           </div>
         </section>
@@ -152,4 +185,3 @@ export default function Home() {
     </main>
   );
 }
-

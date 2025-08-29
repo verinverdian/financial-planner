@@ -1,10 +1,14 @@
 import { useMemo } from "react";
-import type { Income } from "@/types/income";
 import { ArrowUp, ArrowDown } from "lucide-react";
+
+interface Income {
+  amount: number;
+  month_year: string; // format: YYYY-MM
+}
 
 interface IncomeComparisonProps {
   incomes: Income[];
-  selectedMonth: string; // format "YYYY-MM"
+  selectedMonth: string; // format: YYYY-MM
 }
 
 export default function IncomeComparison({
@@ -16,31 +20,26 @@ export default function IncomeComparison({
 
     const [year, month] = selectedMonth.split("-").map(Number);
 
-    const currentMonthIncomes = incomes.filter((income) => {
-      const incomeDate = new Date(income.month);
-      return (
-        incomeDate.getFullYear() === year &&
-        incomeDate.getMonth() + 1 === month
-      );
-    });
+    // data bulan ini
+    const currentMonthIncomes = incomes.filter(
+      (income) => income.month_year === selectedMonth
+    );
 
+    // bulan sebelumnya
     const prevMonth = month === 1 ? 12 : month - 1;
     const prevYear = month === 1 ? year - 1 : year;
+    const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2, "0")}`;
 
-    const prevMonthIncomes = incomes.filter((income) => {
-      const incomeDate = new Date(income.month);
-      return (
-        incomeDate.getFullYear() === prevYear &&
-        incomeDate.getMonth() + 1 === prevMonth
-      );
-    });
+    const prevMonthIncomes = incomes.filter(
+      (income) => income.month_year === prevMonthStr
+    );
 
     const currentTotal = currentMonthIncomes.reduce(
-      (sum, inc) => sum + inc.amount,
+      (sum, inc) => sum + Number(inc.amount),
       0
     );
     const prevTotal = prevMonthIncomes.reduce(
-      (sum, inc) => sum + inc.amount,
+      (sum, inc) => sum + Number(inc.amount),
       0
     );
 
@@ -57,7 +56,11 @@ export default function IncomeComparison({
     if (diff > 0) {
       return { status: "increase", amount: diff, percentage };
     } else if (diff < 0) {
-      return { status: "decrease", amount: Math.abs(diff), percentage: Math.abs(percentage) };
+      return {
+        status: "decrease",
+        amount: Math.abs(diff),
+        percentage: Math.abs(percentage),
+      };
     } else {
       return { status: "same", amount: 0, percentage: 0 };
     }
@@ -74,7 +77,8 @@ export default function IncomeComparison({
         <>
           <ArrowUp size={16} className="text-green-500" />
           <span className="text-green-500">
-            Naik {formatMoney(comparison.amount)} ({comparison.percentage.toFixed(1)}%) dibanding bulan lalu
+            Naik {formatMoney(comparison.amount)} (
+            {comparison.percentage.toFixed(1)}%) dibanding bulan lalu
           </span>
         </>
       )}
@@ -82,7 +86,8 @@ export default function IncomeComparison({
         <>
           <ArrowDown size={16} className="text-red-500" />
           <span className="text-red-500">
-            Turun {formatMoney(comparison.amount)} ({comparison.percentage.toFixed(1)}%) dibanding bulan lalu
+            Turun {formatMoney(comparison.amount)} (
+            {comparison.percentage.toFixed(1)}%) dibanding bulan lalu
           </span>
         </>
       )}

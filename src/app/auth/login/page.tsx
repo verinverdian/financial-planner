@@ -35,33 +35,18 @@ export default function LoginPage() {
 
   return (
     <>
-      <head>
+      {/* <head>
         <title>Login | Financial Tracking</title>
         <meta
           name="description"
           content="Masuk ke aplikasi Financial Tracking untuk mengelola keuangan Anda."
         />
-      </head>
+      </head> */}
 
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
         <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg space-y-6">
           {/* Login manual pakai email & password */}
           <AuthForm type="login" />
-
-          {/* Kalau mau aktifkan Google login tinggal buka komentar */}
-          {/* <div className="flex items-center gap-2">
-            <hr className="flex-1 border-gray-300" />
-            <span className="text-sm text-gray-500">atau</span>
-            <hr className="flex-1 border-gray-300" />
-          </div>
-
-          <button
-            onClick={handleGoogleLogin}
-            className="w-full px-4 py-2 flex items-center justify-center gap-2 border border-gray-300 rounded hover:bg-gray-50"
-          >
-            <img src="/google-logo.svg" alt="Google" className="w-5 h-5" />
-            Login dengan Google
-          </button> */}
         </div>
       </div>
     </>
