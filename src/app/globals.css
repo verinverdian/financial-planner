@@ -4,6 +4,7 @@
 
 html {
   transition: background-color 0.3s ease, color 0.3s ease;
+  scroll-behavior: smooth;
 }
 
 .dark {
@@ -20,3 +21,13 @@ html {
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
 }
+
+.recharts-pie-label-text {
+  font-size: 14px;  /* kecilin angka persen */
+}
+
+.recharts-legend-item-text {
+  font-size: 12px;  /* kecilin label legend bawah */
+}
+
+

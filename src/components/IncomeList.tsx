@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Income } from '@/types/income';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient'; // ✅ tetap dipakai untuk edit
+import { supabase } from '@/lib/supabaseClient';
 import ConfirmModal from "./ConfirmModal";
 
 interface IncomeListProps {
@@ -17,9 +17,16 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
   const [editData, setEditData] = useState<Income | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ State untuk modal konfirmasi
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  // ✅ State untuk kontrol Load More
+  const [visibleCount, setVisibleCount] = useState(3);
+
+  // ✅ State untuk Filter
+  const [search, setSearch] = useState("");
+  const [month, setMonth] = useState<string>("");
+
 
   const handleEdit = (income: Income) => {
     setEditingId(income.id);
@@ -75,25 +82,88 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
 
   const handleConfirmDelete = () => {
     if (selectedId) {
-      onDeleted(selectedId); // ✅ panggil handler parent
+      onDeleted(selectedId);
       setSelectedId(null);
       setShowConfirm(false);
     }
   };
 
-  if (incomes.length === 0) {
+  // ✅ Terapkan filter pada data incomes
+  const filteredIncomes = incomes.filter((income) => {
+    const matchSearch = income.source.toLowerCase().includes(search.toLowerCase());
+    const matchMonth = month ? income.month_year.startsWith(month) : true;
+    return matchSearch && matchMonth;
+  });
+
+  if (filteredIncomes.length === 0) {
     return (
-      <p className="text-gray-500 mt-4">
-        Belum ada pemasukan untuk bulan ini.
-      </p>
+      <div>
+        {/* Filter tetap ditampilkan walau kosong */}
+        <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
+        <div className="flex gap-2 mb-4">
+          <input
+            type="text"
+            placeholder="Cari sumber..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border px-3 py-2 rounded-xl w-full"
+          />
+          <input
+            type="month"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className="border px-3 py-2 rounded-xl"
+          />
+          <button
+            onClick={() => {
+              setSearch("");
+              setMonth("");
+            }}
+            className="px-4 py-2 bg-gray-200 rounded-xl hover:bg-gray-300"
+          >
+            Reset
+          </button>
+        </div>
+        <p className="text-gray-500 mt-4">Belum ada pemasukan untuk bulan ini.</p>
+      </div>
     );
   }
+
+  // ✅ Potong data sesuai visibleCount
+  const visibleIncomes = filteredIncomes.slice(0, visibleCount);
 
   return (
     <div className="bg-white dark:bg-gray-800">
       <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
+
+      {/* ✅ Filter Input + Reset */}
+      <div className="flex gap-2 mb-4">
+        <input
+          type="text"
+          placeholder="Cari sumber..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border px-3 py-2 rounded-xl w-full"
+        />
+        <input
+          type="month"
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          className="border px-3 py-2 rounded-xl"
+        />
+        <button
+          onClick={() => {
+            setSearch("");
+            setMonth("");
+          }}
+          className="px-4 py-2 bg-gray-200 rounded-xl hover:bg-gray-300"
+        >
+          Reset
+        </button>
+      </div>
+
       <ul className="divide-y">
-        {incomes.map((income) => (
+        {visibleIncomes.map((income) => (
           <li
             key={income.id}
             className="py-2 flex items-center justify-between"
@@ -147,7 +217,7 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
             ) : (
               <>
                 <div>
-                  <p className="font-semibold">{income.source}</p>
+                  <p className="font-semibold capitalize">{income.source}</p>
                   <p className="text-sm text-gray-500">
                     Rp {Number(income.amount).toLocaleString('id-ID')} • {formatMonthYear(income.month_year)}
                     {income.notes && ` • Note: ${income.notes.length > 30
@@ -176,6 +246,18 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
           </li>
         ))}
       </ul>
+
+      {/* ✅ Tombol Load More */}
+      {visibleCount < filteredIncomes.length && (
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setVisibleCount((prev) => prev + 3)}
+            className="bg-white hover:text-green-600 text-sm text-green-500"
+          >
+            Lihat lainnya...
+          </button>
+        </div>
+      )}
 
       {/* Confirm Modal */}
       <ConfirmModal

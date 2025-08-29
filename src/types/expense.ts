@@ -1,17 +1,10 @@
-export type Expense = {
-  id: string;             // ID unik untuk edit/hapus
-  name: string;           // Nama pengeluaran
-  amount: number;         // Jumlah pengeluaran
-  category: string;       // Kategori (Makanan, Transportasi, Tagihan, dll)
-  date: string;           // Tanggal pengeluaran (format ISO: YYYY-MM-DD)
-  note?: string;          // Catatan tambahan (opsional)
-  month: string; 
-  // category: Category;
-};
-
-// export type Category =
-//   | 'Makanan'
-//   | 'Transportasi'
-//   | 'Hiburan'
-//   | 'Tagihan'
-//   | 'Lainnya';
+export interface Expense {
+  id: number;
+  user_id: string;
+  category: string;
+  description: string;
+  amount: number;
+  expense_date: string; // format date ISO
+  notes?: string;
+  month?: string; // tambahkan ini
+}

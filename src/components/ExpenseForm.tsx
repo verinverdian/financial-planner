@@ -1,104 +1,152 @@
 'use client';
-import { useState } from 'react';
-import type { Expense } from '@/types/expense';
 
-export default function ExpenseForm({ onAdd }: { onAdd: (expense: Expense) => void }) {
-    const [name, setName] = useState('');
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { Expense } from '@/types/expense';
+
+interface ExpenseFormProps {
+    onAdd: (expense: Expense) => void;
+}
+
+export default function ExpenseForm({ onAdd }: ExpenseFormProps) {
+    const [description, setDescription] = useState('');
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('Makanan');
-    const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10)); // default hari ini
     const [note, setNote] = useState('');
+    const [userId, setUserId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
+    const [date, setDate] = useState(() => {
+        const today = new Date();
+        return today.toISOString().split('T')[0]; // format: "YYYY-MM-DD"
+      });
+      
     const formatNumber = (value: string) => {
         const numericValue = value.replace(/\D/g, '');
         return numericValue ? parseInt(numericValue, 10).toLocaleString('id-ID') : '';
     };
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const formatted = formatNumber(e.target.value);
-        setAmount(formatted);
+        setAmount(formatNumber(e.target.value));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    useEffect(() => {
+        const getUser = async () => {
+            const { data } = await supabase.auth.getUser();
+            if (data?.user) setUserId(data.user.id);
+        };
+        getUser();
+    }, []);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!name || !amount) return;
+        if (!userId) {
+            alert('User belum login!');
+            return;
+        }
 
-        const numericAmount = parseFloat(amount.replace(/\./g, ''));
+        const amountValue = parseInt(amount.replace(/\./g, '')); // ubah jadi angka asli
+        if (isNaN(amountValue)) return;
 
-        onAdd({
-            id: crypto.randomUUID(),
-            name,
-            amount: numericAmount,
-            category,
-            date,
-            note: note.trim() || undefined,
-            month: ''
-        });
+        setLoading(true);
+
+        const { data, error } = await supabase
+            .from('expenses')
+            .insert([
+                {
+                    user_id: userId,
+                    description,
+                    amount: amountValue,
+                    category,
+                    expense_date: date,
+                    notes: note,
+                },
+            ])
+            .select()
+            .single();
+
+        setLoading(false);
+
+        if (error) {
+            console.error(error);
+            alert('Gagal menyimpan data!');
+            return;
+        }
+
+        if (data) {
+            onAdd({
+                id: data.id,
+                description: data.description,
+                amount: parseFloat(data.amount),
+                category: data.category,
+                expense_date: data.expense_date,
+                notes: data.notes || undefined,
+                month: data.expense_date.slice(0, 7),
+                user_id: ''
+            });
+        }
 
         // Reset form
-        setName('');
+        setDescription('');
         setAmount('');
-        setCategory('Makanan');
-        setDate(new Date().toISOString().slice(0, 10));
+        setCategory('');
+        setDate(new Date().toISOString().split('T')[0]);
         setNote('');
     };
+
+    const isDisabled = !description || !amount || !category || !date || loading;
 
     return (
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 mb-4 flex flex-col gap-2">
             <label className="text-lg font-bold mb-2">Pengeluaran</label>
-
             <input
                 type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Nama pengeluaran"
+                placeholder="Deskripsi"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
             />
-
             <input
                 type="text"
-                value={amount || '0'}
+                inputMode="numeric"
+                value={amount ? amount : 0}
                 onChange={handleAmountChange}
                 placeholder="Jumlah"
                 className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
             />
-
             <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
             >
-                <option>Makanan</option>
-                <option>Transportasi</option>
-                <option>Hiburan</option>
-                <option>Tagihan</option>
-                <option>Lainnya</option>
+                <option value="Makanan">Makanan</option>
+                <option value="Transportasi">Transportasi</option>
+                <option value="Hiburan">Hiburan</option>
+                <option value="Tagihan">Tagihan</option>
+                <option value="Lainnya">Lainnya</option>
             </select>
-
             <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
             />
-
             <textarea
+                placeholder="Catatan (opsional)"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Catatan (opsional)"
                 className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
             />
-
             <button
                 type="submit"
-                disabled={!name || !amount || amount === '0'}
-                className={`text-lg text-white px-4 py-2 rounded-lg transition 
-                    ${!name || !amount || amount === '0'
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-green-500 hover:bg-green-600'
-                    }`}           
+                disabled={isDisabled}
+                className={`text-md text-white px-4 py-2 rounded-lg transition 
+                ${isDisabled
+                  ? 'bg-gray-400'
+                  : 'bg-green-500 hover:bg-green-600'
+                }`}
             >
-                Tambah
+                {loading ? 'Menyimpan...' : 'Tambah'}
             </button>
         </form>
     );

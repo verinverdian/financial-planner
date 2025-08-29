@@ -13,12 +13,12 @@ export default function DashboardHeader() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      console.log("Current user: ",user?.id);
 
       if (user?.user_metadata?.full_name) {
         setUserName(user.user_metadata.full_name);
       } else {
         setUserName(user?.email ?? "User");
-        console.log(user)
       }
     };
 
