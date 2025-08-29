@@ -1,23 +1,37 @@
-"use client";
+'use client';
 
-import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 
 export default function ThemeToggle() {
-    const { theme, setTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-    useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    if (storedTheme) {
+      setTheme(storedTheme);
+      document.documentElement.classList.toggle('dark', storedTheme === 'dark');
+    }
+  }, []);
 
-    if (!mounted) return null; // cegah mismatch SSR
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+  };
 
-    return (
-        <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="px-3 py-1 rounded transition-colors duration-200 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-white"
-        >
-            {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
-        </button>
-
-    );
+  return (
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+      aria-label="Toggle Dark Mode"
+    >
+      {theme === 'light' ? (
+        <Moon className="w-5 h-5 text-gray-700" />
+      ) : (
+        <Sun className="w-5 h-5 text-yellow-400" />
+      )}
+    </button>
+  );
 }

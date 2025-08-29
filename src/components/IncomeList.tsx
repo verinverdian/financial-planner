@@ -1,91 +1,72 @@
 'use client';
-import { useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import type { Income } from '@/types/income';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
-import ConfirmModal from "./ConfirmModal"; // path disesuaikan
+import { supabase } from '@/lib/supabaseClient';
+import ConfirmModal from "./ConfirmModal";
 
-export default function IncomeList({
-  incomes,
-  onEdit,
-  onDelete,
-}: {
+interface IncomeListProps {
   incomes: Income[];
-  onEdit: (updatedIncome: Income) => void;
-  onDelete: (id: string) => void;
-}) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editSource, setEditSource] = useState('');
-  const [editAmount, setEditAmount] = useState('');
-  const [editMonth, setEditMonth] = useState('');
-  const [editNote, setEditNote] = useState('');
+  onDeleted: (id: number) => void;
+  onUpdated: (income: Income) => void;
+}
+
+export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeListProps) {
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editData, setEditData] = useState<Income | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const [showConfirm, setShowConfirm] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
-
-  // --- State untuk Load More ---
+  // ✅ State untuk kontrol Load More
   const [visibleCount, setVisibleCount] = useState(3);
 
-  const confirmDelete = (id: string) => {
-    setDeleteId(id);
-    setShowConfirm(true);
-  };
+  // ✅ State untuk Filter
+  const [search, setSearch] = useState("");
+  const [month, setMonth] = useState<string>("");
 
-  const handleDelete = () => {
-    if (deleteId) {
-      onDelete(deleteId);
-    }
-    setShowConfirm(false);
-    setDeleteId(null);
-  };
 
-  const formatNumber = (value: string) => {
-    const numericValue = value.replace(/\D/g, '');
-    return numericValue ? parseInt(numericValue, 10).toLocaleString('id-ID') : '';
-  };
-
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatNumber(e.target.value);
-    setEditAmount(formatted);
-  };
-
-  const startEdit = (income: Income) => {
+  const handleEdit = (income: Income) => {
     setEditingId(income.id);
-    setEditSource(income.source);
-    setEditAmount(income.amount.toLocaleString('id-ID'));
-    setEditMonth(income.month);
-    setEditNote(income.note || '');
+    setEditData({ ...income });
   };
 
-  const saveEditLogic = () => {
-    if (!editSource || !editAmount || !editMonth) {
-      alert('Harap isi semua data yang wajib diisi.')
-      return;
-    }
-    const numericAmount = parseFloat(editAmount.replace(/\./g, ''));
-    onEdit({
-      id: editingId!,
-      source: editSource,
-      amount: numericAmount,
-      month: editMonth,
-      note: editNote || undefined,
-    });
+  const handleCancel = () => {
     setEditingId(null);
+    setEditData(null);
   };
 
-  const saveEdit = () => {
-    setShowSaveConfirm(true);
-  };
+  const handleSave = async () => {
+    if (!editData) return;
 
-  if (incomes.length === 0) {
-    return (
-      <div className="bg-white dark:bg-gray-800">
-        <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
-        <p className="text-gray-500 text-sm">Belum ada pemasukan untuk bulan ini.</p>
-      </div>
-    );
-  }
+    try {
+      setLoading(true);
+      const { id, ...fields } = editData;
+
+      const { data, error } = await supabase
+        .from('incomes')
+        .update(fields)
+        .eq('id', id)
+        .select();
+
+      if (error) {
+        console.error('Error updating income:', error);
+        alert('Gagal update data!');
+        return;
+      }
+
+      if (data && data.length > 0) {
+        onUpdated(data[0]);
+      }
+
+      setEditingId(null);
+      setEditData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatMonthYear = (monthStr: string) => {
     const date = new Date(monthStr);
@@ -94,75 +75,168 @@ export default function IncomeList({
     return `${month.toString().padStart(2, '0')}-${year}`;
   };
 
+  const confirmDelete = (id: number) => {
+    setSelectedId(id);
+    setShowConfirm(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedId) {
+      onDeleted(selectedId);
+      setSelectedId(null);
+      setShowConfirm(false);
+    }
+  };
+
+  // ✅ Terapkan filter pada data incomes
+  const filteredIncomes = incomes.filter((income) => {
+    const matchSearch = income.source.toLowerCase().includes(search.toLowerCase());
+    const matchMonth = month ? income.month_year.startsWith(month) : true;
+    return matchSearch && matchMonth;
+  });
+
+  if (filteredIncomes.length === 0) {
+    return (
+      <div>
+        {/* Filter tetap ditampilkan walau kosong */}
+        <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
+        <div className="flex gap-2 mb-4">
+          <input
+            type="text"
+            placeholder="Cari sumber..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border px-3 py-2 rounded-xl w-full"
+          />
+          <input
+            type="month"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className="border px-3 py-2 rounded-xl"
+          />
+          <button
+            onClick={() => {
+              setSearch("");
+              setMonth("");
+            }}
+            className="px-4 py-2 bg-gray-200 rounded-xl hover:bg-gray-300"
+          >
+            Reset
+          </button>
+        </div>
+        <p className="text-gray-500 mt-4">Belum ada pemasukan untuk bulan ini.</p>
+      </div>
+    );
+  }
+
+  // ✅ Potong data sesuai visibleCount
+  const visibleIncomes = filteredIncomes.slice(0, visibleCount);
+
   return (
     <div className="bg-white dark:bg-gray-800">
       <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
+
+      {/* ✅ Filter Input + Reset */}
+      <div className="flex gap-2 mb-4">
+        <input
+          type="text"
+          placeholder="Cari sumber..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border px-3 py-2 rounded-xl w-full"
+        />
+        <input
+          type="month"
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          className="border px-3 py-2 rounded-xl"
+        />
+        <button
+          onClick={() => {
+            setSearch("");
+            setMonth("");
+          }}
+          className="px-4 py-2 bg-gray-200 rounded-xl hover:bg-gray-300"
+        >
+          Reset
+        </button>
+      </div>
+
       <ul className="divide-y">
-        {incomes.slice(0, visibleCount).map((income) => (
-          <li key={income.id} className="py-2 flex items-center justify-between">
-            {editingId === income.id ? (
-              <div className="flex flex-col gap-2 w-full">
+        {visibleIncomes.map((income) => (
+          <li
+            key={income.id}
+            className="py-2 flex items-center justify-between"
+          >
+            {editingId === income.id && editData ? (
+              <div className="w-full space-y-2">
                 <p className="font-semibold">Edit Data</p>
                 <input
                   type="text"
-                  value={editSource}
-                  onChange={(e) => setEditSource(e.target.value)}
-                  className="border rounded px-2 py-1"
+                  value={editData.source}
+                  onChange={(e) => setEditData({ ...editData, source: e.target.value })}
+                  className="w-full border rounded px-2 py-1"
                 />
                 <input
-                  type="text"
-                  value={editAmount}
-                  onChange={handleAmountChange}
-                  className="border rounded px-2 py-1"
+                  type="number"
+                  value={editData.amount}
+                  onChange={(e) => setEditData({ ...editData, amount: Number(e.target.value) })}
+                  className="w-full border rounded px-2 py-1"
                 />
                 <input
                   type="month"
-                  value={editMonth}
-                  onChange={(e) => setEditMonth(e.target.value)}
-                  className="border rounded px-2 py-1"
+                  value={editData.month_year}
+                  onChange={(e) => setEditData({ ...editData, month_year: e.target.value })}
+                  className="w-full border rounded px-2 py-1"
                 />
-                <textarea
-                  value={editNote}
-                  onChange={(e) => setEditNote(e.target.value)}
-                  className="border rounded px-2 py-1"
+                <input
+                  type="text"
+                  value={editData.notes ?? ''}
+                  onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
+                  className="w-full border rounded px-2 py-1"
                   placeholder="Catatan (opsional)"
                 />
-                <div className="flex gap-2">
+
+                <div className="flex justify-end space-x-2">
                   <button
-                    onClick={saveEdit}
-                    className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded flex items-center gap-1"
+                    onClick={handleSave}
+                    className={`text-green-600 hover:text-green-700 ${loading ? 'opacity-50' : ''}`}
+                    disabled={loading}
                   >
-                    <Check size={16} /> Simpan
+                    {loading ? 'Saving...' : <Check size={18} />}
                   </button>
                   <button
-                    onClick={() => setEditingId(null)}
-                    className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded flex items-center gap-1"
+                    onClick={handleCancel}
+                    className="text-gray-500 hover:text-gray-600"
+                    disabled={loading}
                   >
-                    <X size={16} /> Batal
+                    <X size={18} />
                   </button>
                 </div>
               </div>
             ) : (
               <>
                 <div>
-                  <p className="font-semibold">{income.source}</p>
+                  <p className="font-semibold capitalize">{income.source}</p>
                   <p className="text-sm text-gray-500">
-                    Rp {income.amount.toLocaleString('id-ID')} • {formatMonthYear(income.month)}
-                    {income.note && ` • Note: ${income.note.length > 30
-                      ? income.note.substring(0, 30) + '...'
-                      : income.note}`}
+                    Rp {Number(income.amount).toLocaleString('id-ID')} • {formatMonthYear(income.month_year)}
+                    {income.notes && ` • Note: ${income.notes.length > 30
+                        ? income.notes.substring(0, 30).trim() + '...'
+                        : income.notes
+                      }`
+                    }
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => startEdit(income)}
-                    className="text-blue-500 hover:text-blue-700"
+                    onClick={() => handleEdit(income)}
+                    className="text-blue-500 hover:text-blue-600"
                   >
                     <Pencil size={18} />
                   </button>
                   <button
                     onClick={() => confirmDelete(income.id)}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-red-500 hover:text-red-600"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -173,35 +247,28 @@ export default function IncomeList({
         ))}
       </ul>
 
-      {/* Tombol Load More */}
-      {visibleCount < incomes.length && (
-        <div className="mt-4 flex justify-center">
+      {/* ✅ Tombol Load More */}
+      {visibleCount < filteredIncomes.length && (
+        <div className="mt-4 text-center">
           <button
-            onClick={() => setVisibleCount(prev => prev + 3)}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm"
+            onClick={() => setVisibleCount((prev) => prev + 3)}
+            className="bg-white hover:text-green-600 text-sm text-green-500"
           >
-            Load More
+            Lihat lainnya...
           </button>
         </div>
       )}
 
-      {/* Modal Konfirmasi */}
+      {/* Confirm Modal */}
       <ConfirmModal
         isOpen={showConfirm}
-        title="Hapus Data Pemasukan"
-        message="Yakin ingin menghapus pemasukan ini?"
-        onCancel={() => setShowConfirm(false)}
-        onConfirm={handleDelete}
-      />
-      <ConfirmModal
-        isOpen={showSaveConfirm}
-        title="Konfirmasi Simpan"
-        message={`Yakin ingin menyimpan perubahan untuk "${editSource}"?`}
-        onConfirm={() => {
-          saveEditLogic();
-          setShowSaveConfirm(false);
+        title="Hapus Pemasukan"
+        message="Apakah Anda yakin ingin menghapus data ini?"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setShowConfirm(false);
+          setSelectedId(null);
         }}
-        onCancel={() => setShowSaveConfirm(false)}
       />
     </div>
   );

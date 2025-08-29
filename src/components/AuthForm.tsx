@@ -134,11 +134,10 @@ export default function AuthForm({ type }: { type: 'login' | 'signup' }) {
         <button
           type="submit"
           disabled={isDisabled}
-          className={`w-full py-2 rounded text-white ${
-            isDisabled
+          className={`w-full py-2 rounded text-white ${isDisabled
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-green-500 hover:bg-green-600'
-          }`}
+            }`}
         >
           {type === 'login' ? 'Login' : 'Sign Up'}
         </button>

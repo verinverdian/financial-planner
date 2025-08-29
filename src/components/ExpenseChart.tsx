@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import type { TooltipProps } from 'recharts';
 
 // Warna kategori
 const COLORS: Record<string, string> = {
@@ -106,13 +107,13 @@ export default function ExpenseChart({ expenses }: { expenses: Expense[] }) {
                   />
                 ))}
               </Pie>
-              <Tooltip
-                formatter={(value: number, name, props: any) => {
-                  const percent = ((value / totalAmount) * 100).toFixed(1);
-                  const label = props.payload?.name || '';
-                  return [`${label} Rp ${value.toLocaleString('id-ID')} (${percent}%)`];
-                }}
-              />
+<Tooltip
+  formatter={(value: number, name: string, props: TooltipProps['payload'][0]) => {
+    const percent = ((Number(value) / totalAmount) * 100).toFixed(1);
+    const label = props?.name || '';
+    return [`${label} Rp ${Number(value).toLocaleString('id-ID')} (${percent}%)`];
+  }}
+/>
             </PieChart>
           </ResponsiveContainer>
         </div>

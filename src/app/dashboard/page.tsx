@@ -1,348 +1,329 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Eye, EyeOff } from "lucide-react";
-import type { Expense } from '@/types/expense';
-import type { Income } from '@/types/income';
+import { supabase } from '@/lib/supabaseClient';
 import Header from '@/components/Header';
-import ExpenseForm from '@/components/ExpenseForm';
-import ExpenseList from '@/components/ExpenseList';
-import ExpenseChart from '@/components/ExpenseChart';
+import DashboardHeader from '@/components/DashboardHeader';
 import IncomeForm from '@/components/IncomeForm';
+import ExpenseForm from '@/components/ExpenseForm';
 import IncomeList from '@/components/IncomeList';
-import ExpenseComparison from '@/components/ExpenseComparison';
-import IncomeComparison from "@/components/IncomeComparison";
-import ProtectedRoute from '@/components/ProtectedRoute';
+import ExpenseList from '@/components/ExpenseList';
+import MonthFilter from '@/components/MonthFilter';
+import ExpenseChart from '@/components/ExpenseChart';
+import SummaryCard from '@/components/SummaryCard';
+import Last7DaysExpenseChart from '@/components/Last7DaysExpenseChart';
+import { useRouter } from 'next/navigation';
+import type { Income } from '@/types/income';
+import type { Expense } from '@/types/expense';
+import IncomeExpenseTrendChart from '@/components/IncomeExpenseTrendChart';
+import QuickSummary from '@/components/QuickSummary';
 
-export default function HomePage() {
-  const today = new Date();
-  const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+export default function Dashboard() {
+  const router = useRouter();
 
-  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [incomes, setIncomes] = useState<Income[]>([]);
-  const [filter, setFilter] = useState('');
-  // const [month, setMonth] = useState<string>(currentMonth); // default bulan ini
-  const [month, setMonth] = useState(''); // default bulan ini
-  const [showAmount, setShowAmount] = useState(true);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
 
-  const [filterMonth, setFilterMonth] = useState<string>(currentMonth);
+  // ✅ State bulan yang dipilih (default: bulan sekarang)
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    new Date().toISOString().slice(0, 7) // YYYY-MM
+  );
 
-  const formatMoney = (amount: number) =>
-    showAmount ? `Rp ${amount.toLocaleString("id-ID")}` : "•••••••";
-
-  // === Load dari localStorage ===
+  // ================= Session =================
   useEffect(() => {
-    const savedExpenses = localStorage.getItem('expenses');
-    if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-    const savedIncomes = localStorage.getItem('incomes');
-    if (savedIncomes) setIncomes(JSON.parse(savedIncomes));
+      if (!session) {
+        router.replace('/auth/login');
+      } else {
+        const uid = session.user.id;
+        setUserId(uid);
 
-    const savedMonth = localStorage.getItem('month');
-    if (savedMonth) {
-      setMonth(savedMonth);
-    } else {
-      setMonth(currentMonth); // kalau belum ada, set bulan ini
-    }
-  }, [currentMonth]);
+        // ✅ Cek apakah uid sama dengan state userId
+        console.log('session.user.id:', uid);
+        console.log('userId state:', userId);
+        console.log('Apakah sama?', uid === userId);
+      }
 
+      setCheckingSession(false);
+    };
 
-  // === Simpan ke localStorage ===
+    checkSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!session) router.replace('/');
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [router, userId]);
+
+  // ================= Fetch data =================
   useEffect(() => {
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-  }, [expenses]);
+    const fetchData = async () => {
+      if (!userId) return;
+      setLoading(true);
 
-  useEffect(() => {
-    localStorage.setItem('incomes', JSON.stringify(incomes));
-  }, [incomes]);
+      const { data: incomeData, error: incomeError } = await supabase
+        .from('incomes')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-  useEffect(() => {
-    localStorage.setItem('month', month);
-  }, [month]);
+      if (incomeError) console.error('Error fetching incomes:', incomeError.message);
+      else setIncomes((incomeData || []) as Income[]);
 
-  // === Handler Tambah Income ===
-  const handleAddIncome = (income: Income) => {
-    if (!income.amount || income.amount <= 0) {
-      alert('Nominal pemasukan harus lebih dari 0');
-      return;
-    }
-    if (!income.source) {
-      alert('Sumber pemasukan tidak boleh kosong');
-      return;
-    }
-    setIncomes(prev => [...prev, { ...income, month }]);
-  };
+      const { data: expenseData, error: expenseError } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-  // === Handler Tambah Expense ===
-  const handleAddExpense = (expense: Expense) => {
-    if (!expense.amount || expense.amount <= 0) {
-      alert('Nominal pengeluaran harus lebih dari 0');
-      return;
-    }
-    if (!expense.category) {
-      alert('Kategori tidak boleh kosong');
-      return;
-    }
-    setExpenses(prev => [...prev, { ...expense, month }]);
-  };
+      if (expenseError) console.error('Error fetching expenses:', expenseError.message);
+      else setExpenses((expenseData || []) as Expense[]);
 
-  // === Filter data per bulan & kategori ===
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [userId]);
+
+  // ================= Filter data sesuai bulan =================
   const filteredIncomes = useMemo(() => {
-    return incomes.filter(inc => inc.month === month);
-  }, [incomes, month]);
+    return incomes.filter((i) => i.month_year === selectedMonth);
+  }, [incomes, selectedMonth]);
 
   const filteredExpenses = useMemo(() => {
-    return expenses.filter(
-      exp =>
-        exp.month === month &&
-        (filter ? exp.category === filter : true)
+    return expenses.filter((e) => e.expense_date.startsWith(selectedMonth));
+  }, [expenses, selectedMonth]);
+
+  // ================= Perhitungan Ringkasan =================
+  const {
+    totalIncomeCurrent,
+    totalIncomePrev,
+    totalExpenseCurrent,
+    totalExpensePrev,
+  } = useMemo(() => {
+    const [y, m] = selectedMonth.split('-').map(Number);
+
+    const totalIncomeCurrent = filteredIncomes.reduce((s, i) => s + Number(i.amount), 0);
+    const totalExpenseCurrent = filteredExpenses.reduce((s, e) => s + Number(e.amount), 0);
+
+    // Hitung bulan sebelumnya
+    const prevMonth = m === 1 ? 12 : m - 1;
+    const prevYear = m === 1 ? y - 1 : y;
+    const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+
+    const totalIncomePrev = incomes
+      .filter((i) => i.month_year === prevMonthStr)
+      .reduce((s, i) => s + Number(i.amount), 0);
+
+    const totalExpensePrev = expenses
+      .filter((e) => e.expense_date.startsWith(prevMonthStr))
+      .reduce((s, e) => s + Number(e.amount), 0);
+
+    return {
+      totalIncomeCurrent,
+      totalIncomePrev,
+      totalExpenseCurrent,
+      totalExpensePrev,
+    };
+  }, [filteredIncomes, filteredExpenses, incomes, expenses, selectedMonth]);
+
+  // ================= Cari kategori terbesar =================
+  const topCategory = useMemo(() => {
+    if (filteredExpenses.length === 0) return null;
+
+    const categoryTotals: Record<string, number> = {};
+    filteredExpenses.forEach((e) => {
+      categoryTotals[e.category] = (categoryTotals[e.category] || 0) + Number(e.amount);
+    });
+
+    // cari kategori dengan jumlah terbesar
+    const entries = Object.entries(categoryTotals);
+    if (entries.length === 0) return null;
+
+    const [maxCategory, maxAmount] = entries.reduce((a, b) => (a[1] > b[1] ? a : b));
+    const totalExpense = filteredExpenses.reduce((s, e) => s + Number(e.amount), 0);
+
+    return {
+      name: maxCategory,
+      percentage: (maxAmount / totalExpense) * 100,
+    };
+  }, [filteredExpenses]);
+
+
+  // ================= CRUD =================
+  const handleDeleteIncome = async (id: number) => {
+    const { error } = await supabase.from('incomes').delete().eq('id', id);
+    if (error) console.error('Error deleting income:', error.message);
+    else setIncomes((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const handleUpdateIncome = (updatedIncome: Income) => {
+    setIncomes((prev) => prev.map((inc) => (inc.id === updatedIncome.id ? updatedIncome : inc)));
+  };
+
+  const handleAddIncome = (newIncome: Income) => {
+    setIncomes((prev) => [newIncome, ...prev]);
+  };
+
+  const handleAddExpense = (newExpense: Expense) => {
+    setExpenses((prev) => [newExpense, ...prev]);
+  };
+
+  const handleDeleteExpense = async (id: number) => {
+    const { error } = await supabase.from('expenses').delete().eq('id', id);
+    if (error) console.error('Error deleting expense:', error.message);
+    else setExpenses((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  const handleUpdateExpense = (updatedExpense: Expense) => {
+    setExpenses((prev) => prev.map((e) => (e.id === updatedExpense.id ? updatedExpense : e)));
+  };
+
+  if (checkingSession) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Memeriksa sesi...</p>
+      </main>
     );
-  }, [expenses, filter, month]);
-
-  // === Hitung total ===
-  const totalIncome = filteredIncomes.reduce((sum, inc) => sum + inc.amount, 0);
-  const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const remaining = totalIncome - totalExpenses;
-  const percentage = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
-
-  // === Export data ===
-  const handleExportCSV = () => {
-    if (!expenses || expenses.length === 0) {
-      alert("Tidak ada data untuk diexport");
-      return;
-    }
-
-    // Buat salinan data dengan id = nomor urut
-    const dataWithNumberId = expenses.map((item, index) => ({
-      ...item,
-      id: index + 1
-    }));
-
-    // Ambil header dari keys object pertama
-    const headers = Object.keys(dataWithNumberId[0]).join(",");
-
-    // Ambil isi data
-    const rows = dataWithNumberId
-      .map(obj => Object.values(obj)
-        .map(val => `"${val}"`) // Tambahkan tanda kutip agar aman untuk teks
-        .join(","))
-      .join("\n");
-
-    // Gabungkan header + data
-    const csvContent = headers + "\n" + rows;
-
-    // Buat file blob untuk diunduh
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-
-    // Buat link download
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "data_pengeluaran.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Warna progress bar
-  let progressColor = 'bg-green-500';
-  if (percentage >= 80) progressColor = 'bg-red-500';
-  else if (percentage >= 50) progressColor = 'bg-yellow-500';
-
-  // Format bulan-tahun
-  const formatMonthYear = (monthString: string) => {
-    if (!monthString) return '';
-    const [year, month] = monthString.split('-');
-    const date = new Date(Number(year), Number(month) - 1);
-    return date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-  };
+  }
 
   return (
-    <ProtectedRoute>
-      <head>
-        <title>Dashboard | Financial Tracking</title>
-        <meta
-          name="description"
-          content="Masuk ke aplikasi Financial Tracking untuk mengelola keuangan Anda."
-        />
-      </head>
-      <main className="min-h-screen bg-white dark:bg-gray-600">
-        <Header />
+    <main className="min-h-screen bg-white dark:bg-gray-600">
+      <Header />
 
-        <div className="p-4 pb-0 shadow-sm">
-          <div className="px-4 py-3 leading-normal bg-green-100 dark:bg-gray-800 dark:border-gray-900 rounded-lg border-2 border-green-400">
-            <p>Halo 👋, selamat datang di <span className="italic">tracking</span> keuangan kamu!</p>
+      {/* Alert informasi user */}
+      <div className="px-6 py-1">
+        <DashboardHeader />
+      </div>
+
+      <div className="max-w-8xl mx-auto p-4 flex flex-col md:flex-row gap-4">
+        <div className="w-full md:w-1/3 space-y-4">
+          {/* Form Incomes */}
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+            {!checkingSession ? (
+              userId ? (
+                <IncomeForm onAdded={handleAddIncome} />
+              ) : (
+                <p className="text-red-500">Anda belum login!</p>
+              )
+            ) : (
+              <p className="text-gray-500">Memeriksa sesi...</p>
+            )}
+          </div>
+          {/* Form Expenses */}
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+            {!checkingSession ? (
+              userId ? (
+                <ExpenseForm onAdd={handleAddExpense} />
+              ) : (
+                <p className="text-red-500">Anda belum login!</p>
+              )
+            ) : (
+              <p className="text-gray-500">Memeriksa sesi...</p>
+            )}
+          </div>
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+            {/* <BudgetsTracker totalExpense={totalExpenseCurrent} /> */}
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto p-4 flex flex-col md:flex-row gap-4">
-          {/* Bagian kiri */}
-          <div className="w-full md:w-1/3 space-y-4">
-            {/* Form Pemasukan */}
-            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-              <IncomeForm onAdd={handleAddIncome} />
-            </div>
+        {/* Konten utama */}
+        <div className="w-full md:w-2/3 space-y-4">
+          {/* Filter */}
+          <div className="pt-6 pl-6 bg-white">
+            <MonthFilter
+              value={selectedMonth}
+              onChange={(month) => setSelectedMonth(month)}
+            />
+          </div>
 
-            {/* Form Pengeluaran */}
-            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-              <ExpenseForm onAdd={handleAddExpense} />
-            </div>
+          {/* ✅ Summary */}
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+            <QuickSummary
+              totalIncome={totalIncomeCurrent}
+              lastMonthIncome={totalIncomePrev}
+              totalExpense={totalExpenseCurrent}
+              lastMonthExpense={totalExpensePrev}
+              selectedMonth={selectedMonth}
+              topCategory={topCategory || undefined} // << ini tambahan
+            />
+            {/* <SummaryCard
+              totalIncome={totalIncomeCurrent}
+              lastMonthIncome={totalIncomePrev}
+              totalExpense={totalExpenseCurrent}
+              lastMonthExpense={totalExpensePrev}
+              selectedMonth={selectedMonth}
+            /> */}
+          </div>
 
-            {/* Filter & Export */}
-            <div className="flex gap-2 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="w-full p-3 border border-gray-200 rounded-lg flex-1 focus:outline-none focus:ring-2 focus:ring-green-400"
-              >
-                <option value="">Semua Kategori</option>
-                <option value="Makanan">Makanan</option>
-                <option value="Transportasi">Transportasi</option>
-                <option value="Hiburan">Hiburan</option>
-                <option value="Tagihan">Tagihan</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
+          {/* Chart */}
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-1 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+              <ExpenseChart expenses={filteredExpenses} month={selectedMonth} />
+            </div>
+            <div className="flex-1 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-x-auto">
+              <Last7DaysExpenseChart expenses={filteredExpenses} month={selectedMonth} />
             </div>
           </div>
 
-          {/* Bagian kanan */}
-          <div className="w-full md:w-2/3 space-y-4">
-            <div className="flex justify-between items-start">
-              {/* Pilih bulan */}
-              <div className="bg-white p-1 dark:bg-gray-800 rounded-2xl">
-                <label className="font-semibold p-4">Pilih Bulan:</label>
-                <input
-                  type="month"
-                  value={month}
-                  onChange={(e) => setMonth(e.target.value)}
-                  className="p-3 border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                />
-              </div>
+          <div className="p-6">
+            <IncomeExpenseTrendChart
+              incomes={incomes}
+              expenses={expenses}
+            />
+          </div>
 
-              {/* Export Data */}
-              <div className="p-2 flex justify-end items-end">
-                <button
-                  onClick={handleExportCSV}
-                  className="bg-green-500 dark:bg-gray-400 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition"
-                >
-                  Export ke CSV
-                </button>
-              </div>
-            </div>
+          {/* <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+            <ExpenseChart expenses={filteredExpenses} month={selectedMonth} />
+          </div>
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+            <Last7DaysExpenseChart expenses={filteredExpenses} month={selectedMonth} />
+          </div> */}
 
-            {/* Ringkasan */}
-            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-              <div className="mb-4 border-b border-dashed border-gray-400 pb-4">
-                {/* Baris atas: Judul + jumlah */}
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold">
-                    Total Pemasukan {month && `(${formatMonthYear(month)})`}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl font-bold">{formatMoney(totalIncome)}</span>
-                    <button
-                      onClick={() => setShowAmount((prev) => !prev)}
-                      className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                    >
-                      {showAmount ? <Eye size={20} /> : <EyeOff size={20} />}
-                    </button>
-                  </div>
-                </div>
 
-                {/* Baris bawah: IncomeComparison */}
-                <div className="mt-1">
-                  <IncomeComparison incomes={incomes} selectedMonth={month} />
-                </div>
-              </div>
-
-              {/* Total Pengeluaran */}
-              <div className="flex justify-between mb-1 text-red-500">
-                <span className="text-xl font-bold">Total Pengeluaran</span>
-                <span className="text-xl font-bold">
-                  {formatMoney(totalExpenses)}
-                </span>
-              </div>
-              {/* Expense Comparison */}
-              <div className="pb-2">
-                <ExpenseComparison expenses={expenses} selectedMonth={month} />
-              </div>
-
-              {/* Progress Bar */}
-              <div className="w-full h-4 bg-gray-200 rounded-full mb-2 overflow-hidden">
-                <div
-                  className={`h-4 rounded-full ${progressColor} transition-all duration-500`}
-                  style={{ width: `${Math.min(percentage, 100)}%` }}
-                />
-              </div>
-              <p className="text-sm text-gray-500 mb-4">
-                {percentage.toFixed(1)}% dari pemasukan
-              </p>
-
-              {/* Sisa Uang */}
-              <div className="flex justify-between">
-                <span className={`text-xl font-bold ${remaining < 0 ? "text-red-500" : "text-green-600"
-                  }`}>
-                  {remaining < 0 ? "Hutang/Defisit" : "Sisa Uang/Saldo Bersih"}
-                </span>
-                < span
-                  className={`text-xl font-bold ${remaining < 0 ? "text-red-500" : "text-green-600"
-                    }`}
-                >
-                  {formatMoney(Math.abs(remaining))}
-                </span>
-              </div>
-              {remaining < 0 && (
-                <div className="mt-2 text-sm text-red-500">
-                  Hutang ini akan dibawa ke bulan berikutnya.
-                </div>
-              )}
-            </div>
-
-            {/* List Pemasukan */}
-            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+          {/* Income List */}
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+            {loading ? (
+              <p className="text-gray-500">Memuat data pemasukan...</p>
+            ) : filteredIncomes.length > 0 ? (
               <IncomeList
                 incomes={filteredIncomes}
-                onEdit={(updatedIncome) => {
-                  setIncomes((prev) =>
-                    prev.map((inc) =>
-                      inc.id === updatedIncome.id ? updatedIncome : inc
-                    )
-                  );
-                }}
-                onDelete={(id) => {
-                  setIncomes((prev) => prev.filter((inc) => inc.id !== id));
-                }}
+                onUpdated={handleUpdateIncome}
+                onDeleted={handleDeleteIncome}
               />
-            </div>
+            ) : (
+              <p className="text-gray-500">Belum ada pemasukan.</p>
+            )}
+          </div>
 
-            {/* List Pengeluaran */}
-            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+          {/* Expense List */}
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+            {loading ? (
+              <p className="text-gray-500">Memuat data pengeluaran...</p>
+            ) : filteredExpenses.length > 0 ? (
               <ExpenseList
-                expenses={expenses}
-                month={month}
-                filter={filter}
-                onEdit={(updatedExpense) => {
-                  setExpenses((prev) =>
-                    prev.map((exp) =>
-                      exp.id === updatedExpense.id ? updatedExpense : exp
-                    )
-                  );
-                }}
-                onDelete={(id) => {
-                  setExpenses((prev) => prev.filter((exp) => exp.id !== id));
-                }}
+                expenses={filteredExpenses}
+                onUpdated={handleUpdateExpense}
+                onDeleted={handleDeleteExpense}
               />
-            </div>
-
-            {/* Grafik */}
-            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-              {filteredExpenses.length >= 0 && (
-                <ExpenseChart expenses={filteredExpenses} />
-              )}
-            </div>
+            ) : (
+              <p className="text-gray-500">Belum ada pengeluaran.</p>
+            )}
           </div>
         </div>
-      </main>
-    </ProtectedRoute>
+      </div>
+    </main>
   );
 }
