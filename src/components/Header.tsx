@@ -10,7 +10,6 @@ import { Menu } from "@headlessui/react";
 import { Bell, Download, User as UserIcon, LogOut } from "lucide-react";
 import Image from "next/image";
 
-// Fungsi untuk ambil tanggal tracking terakhir user
 const getLastTrackingDate = async (userId: string | undefined) => {
   if (!userId) return null;
   const { data, error } = await supabase
@@ -28,6 +27,7 @@ export default function Header() {
   const [user, setUser] = useState<User | null>(null);
   const [showNotification, setShowNotification] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function Header() {
       if (data.user?.id) {
         const lastTracking = await getLastTrackingDate(data.user.id);
         const now = new Date();
-        const monthKey = `${now.getFullYear()}-${now.getMonth()}`; // key unik untuk bulan ini
+        const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
         const seenNotification = localStorage.getItem(`seenNotification-${monthKey}`);
 
         if ((!lastTracking || lastTracking < new Date(now.getFullYear(), now.getMonth(), 1)) && !seenNotification) {
@@ -57,6 +57,14 @@ export default function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -71,7 +79,11 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white">
+    <header
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 
+        ${isScrolled ? "bg-white dark:bg-gray-900 shadow-md border-b border-gray-200 dark:border-gray-700" : "bg-transparent"}
+      `}
+    >
       <div className="flex justify-between items-center px-8 py-4">
         {/* Logo */}
         <Link href="/">
@@ -80,10 +92,10 @@ export default function Header() {
 
         {/* Menu home */}
         {pathname === "/" && (
-          <div className="hidden md:flex space-x-6 text-gray-700">
-            <Link href="/#features" className="hover:text-green-700">Features</Link>
-            <Link href="/#pricing" className="hover:text-green-700">Pricing</Link>
-            <Link href="/#about" className="hover:text-green-700">About</Link>
+          <div className="hidden md:flex space-x-6 text-gray-700 dark:text-gray-200">
+            <Link href="/#features" className="hover:text-green-700 dark:hover:text-green-400">Features</Link>
+            <Link href="/#pricing" className="hover:text-green-700 dark:hover:text-green-400">Pricing</Link>
+            <Link href="/#about" className="hover:text-green-700 dark:hover:text-green-400">About</Link>
           </div>
         )}
 

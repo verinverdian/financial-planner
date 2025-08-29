@@ -204,7 +204,7 @@ export default function Dashboard() {
       <Header />
 
       {/* Alert informasi user */}
-      <div className="px-6 py-1">
+      <div className="px-6 py-1 mt-20">
         <DashboardHeader />
       </div>
 
