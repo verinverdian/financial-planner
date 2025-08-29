@@ -24,13 +24,18 @@ export default function ExpenseList({ expenses, onDeleted, onUpdated }: ExpenseL
     const [editData, setEditData] = useState<Expense | null>(null);
     const [loading, setLoading] = useState(false);
 
-    // State untuk modal konfirmasi
     const [showConfirm, setShowConfirm] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
-    // ✅ State untuk filter
     const [search, setSearch] = useState("");
     const [category, setCategory] = useState<string | null>(null);
+
+    // ✅ state filter tanggal
+    const [startDate, setStartDate] = useState<string>("");
+    const [endDate, setEndDate] = useState<string>("");
+
+    // ✅ state load more
+    const [visibleCount, setVisibleCount] = useState(5);
 
     const handleEdit = (expense: Expense) => {
         setEditingId(expense.id);
@@ -95,11 +100,18 @@ export default function ExpenseList({ expenses, onDeleted, onUpdated }: ExpenseL
 
     // ✅ Filter pengeluaran
     const filteredExpenses = expenses.filter((exp) => {
-        return (
-            (category ? exp.category === category : true) &&
-            (exp.description?.toLowerCase().includes(search.toLowerCase()) ?? true)
-        );
+        const matchesCategory = category ? exp.category === category : true;
+        const matchesSearch = exp.description?.toLowerCase().includes(search.toLowerCase()) ?? true;
+
+        // filter tanggal
+        const expDate = new Date(exp.expense_date);
+        const matchesStart = startDate ? expDate >= new Date(startDate) : true;
+        const matchesEnd = endDate ? expDate <= new Date(endDate) : true;
+
+        return matchesCategory && matchesSearch && matchesStart && matchesEnd;
     });
+
+    const visibleExpenses = filteredExpenses.slice(0, visibleCount);
 
     if (expenses.length === 0) {
         return (
@@ -117,40 +129,55 @@ export default function ExpenseList({ expenses, onDeleted, onUpdated }: ExpenseL
             <h2 className="text-lg font-bold mb-3">Daftar Pengeluaran</h2>
 
             {/* ✅ Filter UI */}
-            <div className="flex gap-2 mb-3">
+            <p className="my-2 text-sm">Filter data pengeluran:</p>
+            <div className="flex flex-wrap items-center gap-2 mb-3">
                 <input
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Cari pengeluaran..."
-                    className="px-3 py-2 border rounded-xl w-full"
+                    placeholder="Cari..."
+                    className="px-2 py-1.5 text-sm border rounded-lg flex-1 min-w-[120px] focus:outline-none focus:ring-2 focus:ring-green-400"
                 />
                 <select
                     value={category ?? ""}
                     onChange={(e) => setCategory(e.target.value || null)}
-                    className="px-3 py-2 border rounded-xl"
+                    className="px-2 py-1.5 text-sm border rounded-lg w-[140px] focus:outline-none focus:ring-2 focus:ring-green-400"
                 >
-                    <option value="">Semua kategori</option>
+                    <option value="">Semua Kategori</option>
                     <option value="Makanan">Makanan</option>
                     <option value="Transportasi">Transportasi</option>
                     <option value="Hiburan">Hiburan</option>
                     <option value="Tagihan">Tagihan</option>
                     <option value="Lainnya">Lainnya</option>
                 </select>
+                <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="px-2 py-1.5 text-sm border rounded-lg w-[140px] focus:outline-none focus:ring-2 focus:ring-green-400"
+                />
+                <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="px-2 py-1.5 text-sm border rounded-lg w-[140px] focus:outline-none focus:ring-2 focus:ring-green-400"
+                />
                 <button
                     onClick={() => {
                         setSearch("");
                         setCategory(null);
+                        setStartDate("");
+                        setEndDate("");
                     }}
-                    className="px-4 py-2 bg-gray-200 rounded-xl hover:bg-gray-300"
+                    className="px-3 py-1.5 text-sm bg-gray-200 rounded-lg hover:bg-gray-300"
                 >
                     Reset
                 </button>
             </div>
 
-            <div className="max-h-[16rem] overflow-y-auto">
+            <div>
                 <ul className="divide-y divide-gray-200">
-                    {filteredExpenses.map((expense) => {
+                    {visibleExpenses.map((expense) => {
                         const badgeClass = categoryColors[expense.category] || 'bg-gray-100 text-gray-700';
 
                         return (
@@ -160,6 +187,7 @@ export default function ExpenseList({ expenses, onDeleted, onUpdated }: ExpenseL
                             >
                                 {editingId === expense.id && editData ? (
                                     <div className="w-full space-y-2">
+                                        {/* Form Edit */}
                                         <p className="font-semibold">Edit Data</p>
                                         <select
                                             value={editData.category}
@@ -172,7 +200,6 @@ export default function ExpenseList({ expenses, onDeleted, onUpdated }: ExpenseL
                                             <option>Tagihan</option>
                                             <option>Lainnya</option>
                                         </select>
-
                                         <input
                                             type="text"
                                             value={editData.description ?? ''}
@@ -263,6 +290,18 @@ export default function ExpenseList({ expenses, onDeleted, onUpdated }: ExpenseL
                     })}
                 </ul>
             </div>
+
+            {/* ✅ Load More Button */}
+            {visibleCount < filteredExpenses.length && (
+                <div className="flex justify-center mt-3">
+                    <button
+                        onClick={() => setVisibleCount((prev) => prev + 5)}
+                        className="bg-white hover:text-green-600 text-sm text-green-500"
+                    >
+                        Lihat lainnya...
+                    </button>
+                </div>
+            )}
 
             {/* Confirm Modal */}
             <ConfirmModal

@@ -137,26 +137,20 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
       <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
 
       {/* ✅ Filter Input + Reset */}
-      <div className="flex gap-2 mb-4">
+      <p className="my-2 text-sm">Filter data pemasukan:</p>
+      <div className="flex flex-wrap items-center gap-2 mb-3">
         <input
           type="text"
           placeholder="Cari sumber..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border px-3 py-2 rounded-xl w-full"
-        />
-        <input
-          type="month"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className="border px-3 py-2 rounded-xl"
-        />
+          className="px-2 py-1.5 text-sm border rounded-lg flex-1 w-full focus:outline-none focus:ring-2 focus:ring-green-400"
+          />
         <button
           onClick={() => {
             setSearch("");
-            setMonth("");
           }}
-          className="px-4 py-2 bg-gray-200 rounded-xl hover:bg-gray-300"
+          className="px-3 py-1.5 text-sm bg-gray-200 rounded-lg hover:bg-gray-300"
         >
           Reset
         </button>
