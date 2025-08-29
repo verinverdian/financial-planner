@@ -296,9 +296,9 @@ export default function ExpenseList({ expenses, onDeleted, onUpdated }: ExpenseL
                 <div className="flex justify-center mt-3">
                     <button
                         onClick={() => setVisibleCount((prev) => prev + 5)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600"
+                        className="bg-white hover:text-green-600 text-sm text-green-500"
                     >
-                        Load More
+                        Lihat lainnya...
                     </button>
                 </div>
             )}
