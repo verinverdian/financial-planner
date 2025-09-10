@@ -1,28 +1,32 @@
 'use client';
-
-import Image from "next/image";
+//import Image from "next/image";
 import Header from '@/components/Header';
 import { useEffect, useState } from "react";
-import { useRouter } from 'next/navigation'; // ✅ pastikan ini
+import { useRouter } from 'next/navigation';
 import { Wallet, TrendingUp, BarChart } from "lucide-react";
 import { supabase } from '@/lib/supabaseClient';
 
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [year, setYear] = useState<number>(new Date().getFullYear());
 
-  const handleStartTracking = () => {
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
+
+  const handleStartTracking = async () => {
     setLoading(true);
-    setTimeout(async () => {
-      const { data } = await supabase.auth.getSession();
-      setLoading(false);
+    const { data } = await supabase.auth.getSession();
 
+    setTimeout(() => {
+      setLoading(false);
       if (data.session) {
         router.replace('/dashboard');
       } else {
         router.replace('/auth/login');
       }
-    }, 2000); // delay 2 detik
+    }, 2000);
   };
 
   return (
@@ -127,7 +131,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-green-800 mb-8">Pricing</h2>
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="p-6 bg-white rounded-lg shadow">
+              <div className="p-6 bg-white rounded-lg shadow transition-transform duration-300 hover:scale-105 hover:shadow-xl hover:border hover:border-green-600">
                 <h3 className="text-xl font-semibold mb-2">Free</h3>
                 <p className="text-gray-600 mb-4">$0/month</p>
                 <ul className="text-gray-500 mb-6 space-y-1">
@@ -138,7 +142,8 @@ export default function Home() {
                   Choose Plan
                 </button>
               </div>
-              <div className="p-6 bg-white rounded-lg shadow border-2 border-green-700">
+
+              <div className="p-6 bg-white rounded-lg shadow border-2 border-green-700 transition-transform duration-300 hover:scale-105 hover:shadow-xl hover:border-green-800">
                 <h3 className="text-xl font-semibold mb-2">Pro</h3>
                 <p className="text-gray-600 mb-4">$9.99/month</p>
                 <ul className="text-gray-500 mb-6 space-y-1">
@@ -150,7 +155,8 @@ export default function Home() {
                   Choose Plan
                 </button>
               </div>
-              <div className="p-6 bg-white rounded-lg shadow">
+
+              <div className="p-6 bg-white rounded-lg shadow transition-transform duration-300 hover:scale-105 hover:shadow-xl hover:border hover:border-green-600">
                 <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
                 <p className="text-gray-600 mb-4">Custom</p>
                 <ul className="text-gray-500 mb-6 space-y-1">
@@ -164,6 +170,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+
 
         {/* About Section */}
         <section id="about" className="py-20 bg-white">
@@ -179,7 +186,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="py-6 bg-gray-100 text-center bg-white">
-          &copy; {new Date().getFullYear()} FinanceTrack Co. All rights reserved.
+          &copy; {year} FinanceTrack Co. All rights reserved.
         </footer>
       </section>
     </main>

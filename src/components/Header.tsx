@@ -30,6 +30,9 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
 
+  const monthName = new Date().toLocaleString("id-ID", { month: "long" });
+
+
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser();
@@ -93,6 +96,7 @@ export default function Header() {
         {/* Menu home */}
         {pathname === "/" && (
           <div className="hidden md:flex space-x-6 text-gray-700 dark:text-gray-200">
+            <Link href="/" className="hover:text-green-700 dark:hover:text-green-400">Home</Link>
             <Link href="/#features" className="hover:text-green-700 dark:hover:text-green-400">Features</Link>
             <Link href="/#pricing" className="hover:text-green-700 dark:hover:text-green-400">Pricing</Link>
             <Link href="/#about" className="hover:text-green-700 dark:hover:text-green-400">About</Link>
@@ -104,62 +108,67 @@ export default function Header() {
           <ThemeToggle />
 
           {/* Tombol Notifikasi */}
-          <div className="relative">
-            <button
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 relative"
-              aria-label="Notifications"
-              onClick={handleBellClick}
-            >
-              <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              {showNotification && (
-                <span className="absolute top-1 right-1 block w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-              )}
-            </button>
+          {pathname === "/dashboard" && (
+            <div className="relative">
+              <button
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 relative"
+                aria-label="Notifications"
+                onClick={handleBellClick}
+              >
+                <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                {showNotification && (
+                  <span className="absolute top-1 right-1 block w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                )}
+              </button>
 
-            {/* Popup Notifikasi */}
-            {showPopup && (
-              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-green-500 rounded-lg shadow-lg p-4 z-50">
-                <p className="text-gray-800 dark:text-gray-200">
-                  Jangan lupa melakukan tracking bulan ini!
-                </p>
-                <button
-                  className="mt-2 text-sm text-green-700 hover:underline"
-                  onClick={() => setShowPopup(false)}
-                >
-                  Tutup
-                </button>
-              </div>
-            )}
-          </div>
+              {/* Popup Notifikasi */}
+              {showPopup && (
+                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-green-500 rounded-lg shadow-lg p-4 z-50">
+                  <p className="text-gray-800 dark:text-gray-200">
+                    Jangan lupa melakukan tracking bulan ini ({monthName})!
+                  </p>
+                  <div className="flex justify-end mt-4">
+                    <button
+                      className="px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700"
+                      onClick={() => setShowPopup(false)}
+                    >
+                      Tutup
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>)}
 
           {/* Tombol Export */}
-          <div className="relative">
-            <Menu>
-              <Menu.Button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-                <Download className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              </Menu.Button>
-              <Menu.Items className="absolute right-0 mt-2 bg-white border border-green-500 dark:bg-gray-800 shadow-lg rounded-lg p-2 z-50">
-                <Menu.Item>
-                  {({ active }) => (
-                    <button
-                      className={`block px-4 py-2 w-full text-left ${active ? "bg-gray-100 dark:bg-gray-700" : ""}`}
-                    >
-                      Export PDF
-                    </button>
-                  )}
-                </Menu.Item>
-                <Menu.Item>
-                  {({ active }) => (
-                    <button
-                      className={`block px-4 py-2 w-full text-left ${active ? "bg-gray-100 dark:bg-gray-700" : ""}`}
-                    >
-                      Export Excel
-                    </button>
-                  )}
-                </Menu.Item>
-              </Menu.Items>
-            </Menu>
-          </div>
+          {pathname === "/dashboard" && (
+            <div className="relative">
+              <Menu>
+                <Menu.Button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <Download className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                </Menu.Button>
+                <Menu.Items className="absolute right-0 mt-2 bg-white border border-green-500 dark:bg-gray-800 shadow-lg rounded-lg p-2 z-50">
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        className={`block px-4 py-2 w-full text-left ${active ? "bg-gray-100 dark:bg-gray-700" : ""}`}
+                      >
+                        Export PDF
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        className={`block px-4 py-2 w-full text-left ${active ? "bg-gray-100 dark:bg-gray-700" : ""}`}
+                      >
+                        Export Excel
+                      </button>
+                    )}
+                  </Menu.Item>
+                </Menu.Items>
+              </Menu>
+            </div>
+          )}
 
           {/* Avatar User */}
           {user ? (
@@ -190,6 +199,18 @@ export default function Header() {
                   )}
                 </Menu.Button>
                 <Menu.Items className="absolute right-0 mt-2 bg-white dark:bg-gray-800 shadow-lg rounded-lg w-40 z-50 border border-green-500">
+                  {pathname === "/" && (
+                    <Menu.Item>
+                      {({ active }) => (
+                        <Link
+                          href="/dashboard"
+                          className={`flex items-center gap-2 px-4 py-2 ${active ? "bg-gray-100 dark:bg-gray-700" : ""}`}
+                        >
+                          <UserIcon className="w-4 h-4" />
+                          Dashboard
+                        </Link>
+                      )}
+                    </Menu.Item>)}
                   <Menu.Item>
                     {({ active }) => (
                       <Link

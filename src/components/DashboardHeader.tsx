@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { X, PartyPopper } from "lucide-react";
+import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function DashboardHeader() {
@@ -18,7 +18,7 @@ export default function DashboardHeader() {
       if (user?.user_metadata?.full_name) {
         setUserName(user.user_metadata.full_name);
       } else {
-        setUserName(user?.email ?? "User");
+        setUserName(user?.email ?? "Admin Pabrik");
       }
     };
 
@@ -34,24 +34,19 @@ export default function DashboardHeader() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.9 }}
             transition={{ duration: 0.5 }}
-            className="px-5 py-4 bg-gradient-to-r from-green-200 via-green-300 to-green-500 
-                       dark:from-gray-700 dark:via-gray-800 dark:to-gray-900 
-                       rounded-xl border border-green-400 
-                       flex justify-between items-center shadow-xl backdrop-blur"
+            className="px-5 py-4 bg-white dark:bg-gray-800 
+                       rounded-lg border border-green-500 dark:border-gray-700 
+                       flex justify-between items-center shadow-md"
           >
             <div className="flex items-center gap-2">
-              <PartyPopper className="text-green-700 dark:text-yellow-300 animate-pulse" size={22} />
-              <p className="text-gray-800 dark:text-gray-100 text-sm sm:text-base">
-                Halo <span className="inline-block animate-wiggle">👋</span>, selamat datang{" "}
-                <span className="font-bold text-green-800 dark:text-green-300 underline decoration-yellow-400">
-                  {userName}
-                </span>{" "}
-                di <span className="italic">tracking</span> keuangan kamu!
+              <span className="animate-wiggle">👋</span>
+              <p className="text-gray-700 dark:text-gray-200 text-sm sm:text-base">
+                Hai <span className="font-semibold">{userName}</span>, senang melihatmu kembali! Yuk cek laporan keuanganmu hari ini 💰
               </p>
             </div>
             <button
               onClick={() => setShow(false)}
-              className="ml-4 text-gray-600 dark:text-gray-300 hover:text-red-500 transition-colors"
+              className="ml-4 text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors"
             >
               <X size={20} />
             </button>

@@ -16,11 +16,10 @@ export default function IncomeForm({ onAdded }: IncomeFormProps) {
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const now = new Date();
-  const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
-
-  // ✅ Set default bulan saat ini (format YYYY-MM)
+  // ✅ Set default bulan saat ini (format YYYY-MM) hanya di client
   useEffect(() => {
+    const now = new Date();
+    const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
     setMonthYear(currentMonth);
   }, []);
 
@@ -91,7 +90,10 @@ export default function IncomeForm({ onAdded }: IncomeFormProps) {
       });
     }
 
-    // Reset form
+    // Reset form (ambil ulang default bulan saat ini)
+    const now = new Date();
+    const currentMonth = now.toISOString().slice(0, 7);
+
     setSource('');
     setAmount('');
     setMonthYear(currentMonth);
@@ -116,7 +118,7 @@ export default function IncomeForm({ onAdded }: IncomeFormProps) {
         type="text"
         inputMode="numeric"
         placeholder="Jumlah"
-        value={amount ? amount : 0}
+        value={amount || ''}
         onChange={handleAmountChange}
         className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
       />

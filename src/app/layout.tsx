@@ -6,10 +6,14 @@ export const metadata: Metadata = {
   description: "Masuk ke aplikasi Financial Tracking untuk mengelola keuangan Anda.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en" suppressHydrationWarning={true}>
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased bg-background" suppressHydrationWarning>
         {children}
       </body>
     </html>

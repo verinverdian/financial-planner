@@ -10,7 +10,6 @@ import IncomeList from '@/components/IncomeList';
 import ExpenseList from '@/components/ExpenseList';
 import MonthFilter from '@/components/MonthFilter';
 import ExpenseChart from '@/components/ExpenseChart';
-import SummaryCard from '@/components/SummaryCard';
 import Last7DaysExpenseChart from '@/components/Last7DaysExpenseChart';
 import { useRouter } from 'next/navigation';
 import type { Income } from '@/types/income';
@@ -259,13 +258,6 @@ export default function Dashboard() {
               selectedMonth={selectedMonth}
               topCategory={topCategory || undefined} // << ini tambahan
             />
-            {/* <SummaryCard
-              totalIncome={totalIncomeCurrent}
-              lastMonthIncome={totalIncomePrev}
-              totalExpense={totalExpenseCurrent}
-              lastMonthExpense={totalExpensePrev}
-              selectedMonth={selectedMonth}
-            /> */}
           </div>
 
           {/* Chart */}
@@ -284,14 +276,6 @@ export default function Dashboard() {
               expenses={expenses}
             />
           </div>
-
-          {/* <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <ExpenseChart expenses={filteredExpenses} month={selectedMonth} />
-          </div>
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-            <Last7DaysExpenseChart expenses={filteredExpenses} month={selectedMonth} />
-          </div> */}
-
 
           {/* Income List */}
           <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">

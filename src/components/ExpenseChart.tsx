@@ -27,8 +27,7 @@ export default function ExpenseChart({ userId, month, expenses }: ExpenseChartPr
   useEffect(() => {
     const generateCategoryData = (list: { category: string; amount: number }[]) => {
       if (!list || list.length === 0) {
-        setCategoryData([{ name: 'Belum ada data', value: 1 }]);
-        return;
+        return <p className="text-gray-500">Belum ada pengeluaran per kategori.</p>;
       }
       const grouped: Record<string, number> = {};
       list.forEach((item) => {
@@ -75,6 +74,9 @@ export default function ExpenseChart({ userId, month, expenses }: ExpenseChartPr
 
   // Hitung total untuk persen
   const total = categoryData.reduce((sum, item) => sum + item.value, 0);
+
+  if (!categoryData || categoryData.length === 0)
+    return <p className="text-gray-500">Belum ada pengeluaran per kategori.</p>;
 
   return (
     <div className="bg-white">
