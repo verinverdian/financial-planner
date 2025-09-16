@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Income } from '@/types/income';
+import type { Income } from '@/types/income';
+import type { GoalSaving } from '@/types/goal_savings';
 import AllocationModal from './AllocationModal';
 import { AlertCircle } from 'lucide-react';
 
 interface IncomeFormProps {
   onAdded: (income: Income) => void;
-  onGoalUpdated?: (goalId: string, amount: number) => void; // ✅ tambahan
+  onGoalUpdated?: (goalId: string, amount: number) => void;
 }
 
 export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) {
@@ -20,18 +21,19 @@ export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) 
   const [showModal, setShowModal] = useState(false);
   const [tempIncome, setTempIncome] = useState<any>(null);
 
-  const [goals, setGoals] = useState<{ id: string; goal_name: string }[]>([]);
+  // pakai GoalSaving[] agar AllocationModal dapat akses saved_amount/target_amount/is_archived
+  const [goals, setGoals] = useState<GoalSaving[]>([]);
 
   const isDisabled = !source || !amount || !monthYear || loading;
 
-  // ✅ Set default bulan saat ini
+  // Set default bulan saat ini
   useEffect(() => {
     const now = new Date();
     const currentMonth = now.toISOString().slice(0, 7);
     setMonthYear(currentMonth);
   }, []);
 
-  // ✅ Ambil userId otomatis
+  // Ambil userId otomatis
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getUser();
@@ -42,20 +44,35 @@ export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) 
     getUser();
   }, []);
 
-  // ✅ Fetch goals
+  // Fetch goals dari server (mapping ke shape aman)
   const fetchGoals = async () => {
     if (!userId) return;
+
     const { data, error } = await supabase
       .from('goal_savings')
-      .select('id, goal_name, is_archived') // tambahin is_archived
+      .select('id, goal_name, saved_amount, target_amount, is_archived')
       .eq('user_id', userId);
 
     if (!error && data) {
-      setGoals(
-        data
-          .filter((g) => !g.is_archived) // filter langsung goal aktif
-          .map((g) => ({ id: String(g.id), goal_name: g.goal_name }))
+      // map hasil agar tipe aman
+      const mapped = (data as any[]).map((g) => ({
+        id: String(g.id),
+        goal_name: String(g.goal_name ?? ''),
+        saved_amount: Number(g.saved_amount ?? 0),
+        target_amount: Number(g.target_amount ?? 0),
+        is_archived: Boolean(g.is_archived ?? false),
+      }));
+
+      // only active goals that still need saving
+      const active = mapped.filter(
+        (g) => !g.is_archived && Number(g.saved_amount) < Number(g.target_amount)
       );
+
+      // cast ke GoalSaving[] supaya sesuai tipe komponen lain
+      setGoals(active as unknown as GoalSaving[]);
+    } else {
+      // jika error, kosongkan atau handle sesuai kebutuhan
+      setGoals([]);
     }
   };
 
@@ -67,6 +84,7 @@ export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) 
     if (showModal) fetchGoals();
   }, [showModal]);
 
+  // formatting for amount input (e.g. 1000000 -> "1.000.000")
   const formatNumber = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
     return numericValue ? parseInt(numericValue, 10).toLocaleString('id-ID') : '';
@@ -83,7 +101,7 @@ export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) 
       return;
     }
 
-    const amountValue = parseInt(amount.replace(/\./g, ''));
+    const amountValue = parseInt(amount.replace(/\./g, ''), 10);
     if (isNaN(amountValue)) return;
 
     setTempIncome({
@@ -97,7 +115,7 @@ export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) 
     setShowModal(true);
   };
 
-  // ✅ Setelah user pilih alokasi
+  // Setelah user pilih alokasi
   const handleAllocation = async (allocation: any) => {
     setLoading(true);
 
@@ -111,7 +129,7 @@ export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) 
           .single();
 
         if (!error && data) {
-          onAdded(data); // update IncomeList
+          onAdded(data);
         }
       }
 
@@ -129,7 +147,7 @@ export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) 
             .update({ saved_amount: newSaved })
             .eq('id', allocation.goalId);
 
-          // ✅ update state goals di parent
+          // update parent state via callback
           onGoalUpdated?.(allocation.goalId, tempIncome.amount);
         }
 
@@ -173,7 +191,7 @@ export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) 
               .update({ saved_amount: newSaved })
               .eq('id', goalId);
 
-            // ✅ update state goals di parent
+            // update parent state
             onGoalUpdated?.(goalId, goalAmount);
           }
 
@@ -204,7 +222,6 @@ export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) 
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 mb-4 flex flex-col gap-2">
         <label className="text-lg font-bold mb-2">Pemasukan</label>
 
-        {/* ✅ Alert info untuk tambah goal */}
         <div className="flex items-center gap-2 p-3 mb-2 text-sm text-blue-800 bg-blue-100 border border-blue-300 rounded-lg">
           <AlertCircle className="w-4 h-4 text-blue-600" />
           <span>Punya tujuan? Tambahkan <b>Goal</b> di bawah.</span>
@@ -222,7 +239,7 @@ export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) 
           type="text"
           inputMode="numeric"
           placeholder="Jumlah"
-          value={amount || 0}
+          value={amount}
           onChange={handleAmountChange}
           className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
         />
@@ -245,10 +262,7 @@ export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) 
           type="submit"
           disabled={isDisabled}
           className={`text-md text-white px-4 py-2 rounded-lg transition 
-          ${isDisabled
-              ? 'bg-gray-400'
-              : 'bg-green-500 hover:bg-green-600'
-            }`}
+            ${isDisabled ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-600'}`}
         >
           {loading ? 'Menyimpan...' : 'Tambah'}
         </button>

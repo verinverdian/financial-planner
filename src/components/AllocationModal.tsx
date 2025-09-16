@@ -1,21 +1,16 @@
 import { useState, useEffect } from "react";
-
-interface Goal {
-  id: string;          // bigint dari Supabase dikirim sebagai string
-  goal_name: string;
-  is_archived?: boolean; // tambahan field untuk menandai goal tercapai
-}
+import type { GoalSaving } from "@/types/goal_savings";
 
 type AllocationResult =
-  | { type: "saldo"; amount: number | null }
-  | { type: "goal"; goalId: string; amount: number | null }
+  | { type: "saldo" }
+  | { type: "goal"; goalId: string }
   | { type: "split"; goalId: string; goalAmount: number; saldoAmount: number };
 
 interface AllocationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: AllocationResult) => void;
-  goals?: Goal[];
+  goals?: GoalSaving[];
 }
 
 export default function AllocationModal({
@@ -25,55 +20,67 @@ export default function AllocationModal({
   goals = [],
 }: AllocationModalProps) {
   const [option, setOption] = useState<"saldo" | "goal" | "split">("saldo");
-  const [goalId, setGoalId] = useState<string>(goals[0]?.id || "");
-  const [splitGoalId, setSplitGoalId] = useState<string>(goals[0]?.id || "");
+  const [goalId, setGoalId] = useState<string>(goals[0]?.id ?? "");
+  const [splitGoalId, setSplitGoalId] = useState<string>(goals[0]?.id ?? "");
   const [splitAmount, setSplitAmount] = useState({ goal: "", saldo: "" });
 
-  // Sync goalId dan splitGoalId setiap kali goals berubah
+  const formatNumber = (value: string) => {
+    const numeric = value.replace(/\D/g, "");
+    if (!numeric) return "";
+    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
+
+  const parseNumber = (value: string) => {
+    const cleaned = value.replace(/\./g, "");
+    const n = Number(cleaned);
+    return Number.isNaN(n) ? 0 : n;
+  };
+
   useEffect(() => {
-    if (goals.length > 0) {
-      setGoalId(goals[0].id);
-      setSplitGoalId(goals[0].id);
+    if (!goals || goals.length === 0) {
+      setGoalId("");
+      setSplitGoalId("");
+      return;
+    }
+    const firstActive = goals.find(
+      (g) =>
+        !g.is_archived &&
+        Number(g.saved_amount ?? 0) < Number(g.target_amount ?? 0)
+    );
+    const pickId = firstActive?.id ?? goals[0]?.id ?? "";
+    if (pickId) {
+      setGoalId(pickId);
+      setSplitGoalId(pickId);
     }
   }, [goals]);
 
-  // Helper untuk format angka dengan titik pemisah ribuan
-  const formatNumber = (value: string) => {
-    const numeric = value.replace(/\D/g, ""); // ambil angka saja
-    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // kasih titik setiap ribuan
-  };
-
-  // Helper untuk parse kembali string "1.000.000" jadi number
-  const parseNumber = (value: string) => {
-    return Number(value.replace(/\./g, "")) || 0;
-  };
-
   if (!isOpen) return null;
+
+  const activeGoals = goals.filter(
+    (g) =>
+      !g.is_archived && Number(g.saved_amount ?? 0) < Number(g.target_amount ?? 0)
+  );
+
+  const handleChange = (key: "goal" | "saldo", value: string) => {
+    const raw = value.replace(/\D/g, "");
+    setSplitAmount((prev) => ({ ...prev, [key]: formatNumber(raw) }));
+  };
 
   const handleSubmit = () => {
     if (option === "goal") {
-      onSubmit({
-        type: "goal",
-        goalId,
-        amount: Number(splitAmount.goal) || null,
-      });
+      onSubmit({ type: "goal", goalId });
     } else if (option === "saldo") {
-      onSubmit({
-        type: "saldo",
-        amount: Number(splitAmount.saldo) || null,
-      });
+      onSubmit({ type: "saldo" });
     } else if (option === "split") {
       onSubmit({
         type: "split",
         goalId: splitGoalId,
         goalAmount: parseNumber(splitAmount.goal),
-        saldoAmount: parseNumber(splitAmount.saldo),        
+        saldoAmount: parseNumber(splitAmount.saldo),
       });
     }
     onClose();
   };
-
-
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -96,33 +103,24 @@ export default function AllocationModal({
             type="radio"
             checked={option === "goal"}
             onChange={() => setOption("goal")}
-            disabled={goals.length === 0}
+            disabled={activeGoals.length === 0}
           />
-          <span className={goals.length === 0 ? "text-gray-400" : ""}>
+          <span className={activeGoals.length === 0 ? "text-gray-400" : ""}>
             Masuk ke Goal Saving
           </span>
         </label>
-        {option === "goal" && (
-          goals.length > 0 ? (
-            <select
-              value={goalId}
-              onChange={(e) => setGoalId(e.target.value)}
-              className="w-full p-2 mb-3 capitalize border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            >
-              {goals
-                .filter((g) => !g.is_archived) // hanya tampilkan goal aktif
-                .map((g) => (
-                  <option key={g.id} value={g.id} className="capitalize">
-                    {g.goal_name}
-                  </option>
-                ))}
-
-            </select>
-          ) : (
-            <p className="text-sm text-gray-500 mb-3">
-              Belum ada goal yang tersedia.
-            </p>
-          )
+        {option === "goal" && activeGoals.length > 0 && (
+          <select
+            value={goalId}
+            onChange={(e) => setGoalId(e.target.value)}
+            className="w-full p-2 mb-3 capitalize border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+          >
+            {activeGoals.map((g) => (
+              <option key={g.id} value={g.id} className="capitalize">
+                {g.goal_name}
+              </option>
+            ))}
+          </select>
         )}
 
         {/* Split */}
@@ -131,65 +129,45 @@ export default function AllocationModal({
             type="radio"
             checked={option === "split"}
             onChange={() => setOption("split")}
-            disabled={goals.length === 0}
+            disabled={activeGoals.length === 0}
           />
-          <span className={goals.length === 0 ? "text-gray-400" : ""}>
+          <span className={activeGoals.length === 0 ? "text-gray-400" : ""}>
             Split
           </span>
         </label>
-        {option === "split" && (
-          goals.length > 0 ? (
-            <>
-              <select
-                value={splitGoalId}
-                onChange={(e) => setSplitGoalId(e.target.value)}
-                className="w-full p-2 mb-3 capitalize border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-              >
-                {goals.map((g) => (
-                  <option
-                    key={g.id}
-                    value={g.id}
-                    disabled={g.is_archived}
-                    className="capitalize"
-                  >
-                    {g.goal_name} {g.is_archived ? "(Tercapai)" : ""}
-                  </option>
-                ))}
-              </select>
-              <div className="flex space-x-2 mb-3">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Ke Goal"
-                  value={splitAmount.goal}
-                  onChange={(e) =>
-                    setSplitAmount({
-                      ...splitAmount,
-                      goal: formatNumber(e.target.value),
-                    })
-                  }                  
-                  className="w-1/2 border rounded-lg p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                />
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Ke Saldo"
-                  value={splitAmount.saldo}
-                  onChange={(e) =>
-                    setSplitAmount({
-                      ...splitAmount,
-                      saldo: formatNumber(e.target.value),
-                    })
-                  }                  
-                  className="w-1/2 border rounded-lg p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                />
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-gray-500 mb-3">
-              Belum ada goal untuk split.
-            </p>
-          )
+        {option === "split" && activeGoals.length > 0 && (
+          <>
+            <select
+              value={splitGoalId}
+              onChange={(e) => setSplitGoalId(e.target.value)}
+              className="w-full p-2 mb-3 capitalize border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+            >
+              {activeGoals.map((g) => (
+                <option key={g.id} value={g.id} className="capitalize">
+                  {g.goal_name}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex space-x-2 mb-3">
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="Ke Goal"
+                value={splitAmount.goal}
+                onChange={(e) => handleChange("goal", e.target.value)}
+                className="w-1/2 border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="Ke Saldo"
+                value={splitAmount.saldo}
+                onChange={(e) => handleChange("saldo", e.target.value)}
+                className="w-1/2 border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+            </div>
+          </>
         )}
 
         {/* Action Buttons */}
