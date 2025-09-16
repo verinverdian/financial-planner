@@ -273,6 +273,7 @@ export default function IncomeForm({ onAdded, onGoalUpdated }: IncomeFormProps) 
         onClose={() => setShowModal(false)}
         onSubmit={handleAllocation}
         goals={goals}
+        incomeAmount={tempIncome?.amount ?? 0} // ✅ kirim total income ke modal
       />
     </>
   );
