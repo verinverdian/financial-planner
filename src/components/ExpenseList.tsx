@@ -248,7 +248,7 @@ export default function ExpenseList({ expenses, onDeleted, onUpdated }: ExpenseL
                                 ) : (
                                     <>
                                         <div>
-                                            <p className="font-medium capitalize">{expense.description}</p>
+                                            <p className="font-medium capitalize">{expense.description} </p>
                                             <div className="flex items-center text-sm text-gray-500 gap-2 mt-1">
                                                 <span>Tgl. {formatDate(expense.expense_date)}</span>
                                                 <span>

@@ -26,19 +26,19 @@ interface SummaryCardProps {
 
 const categoryStyles: Record<string, { color: string; icon: React.ReactNode }> = {
   Tagihan: {
-    color: "bg-orange-100 text-orange-700",
+    color: "bg-orange-100 text-orange-700 border-orange-200",
     icon: <Receipt className="w-4 h-4" />,
   },
   Transportasi: {
-    color: "bg-green-100 text-green-700",
+    color: "bg-green-100 text-green-700 border-green-200",
     icon: <Car className="w-4 h-4" />,
   },
   Hiburan: {
-    color: "bg-yellow-100 text-yellow-700",
+    color: "bg-yellow-100 text-yellow-700 border-yellow-200",
     icon: <Film className="w-4 h-4" />,
   },
   Makanan: {
-    color: "bg-red-100 text-red-700",
+    color: "bg-red-100 text-red-700 border-red-200",
     icon: <Utensils className="w-4 h-4" />,
   },
 };

@@ -42,7 +42,7 @@ export default function Home() {
 
           {/* Hero content (z-10) */}
           <div
-            className="relative z-10 text-center px-8 py-16 min-h-[500px] flex items-center justify-center"
+            className="relative mt-10 z-10 text-center px-8 py-16 min-h-[500px] flex items-center justify-center"
             style={{
               backgroundImage:
                 "url('https://images.unsplash.com/photo-1605902711622-cfb43c4437d1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80')",
