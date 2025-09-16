@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import DashboardHeader from '@/components/DashboardHeader';
 import IncomeForm from '@/components/IncomeForm';
 import ExpenseForm from '@/components/ExpenseForm';
@@ -435,6 +436,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+        <Footer />
     </main>
   );
 }

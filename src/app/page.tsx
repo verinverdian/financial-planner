@@ -1,10 +1,12 @@
 'use client';
 //import Image from "next/image";
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import { Wallet, TrendingUp, BarChart } from "lucide-react";
 import { supabase } from '@/lib/supabaseClient';
+
 
 export default function Home() {
   const router = useRouter();
@@ -184,10 +186,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="py-6 bg-gray-100 text-center bg-white">
-          &copy; {year} FinanceTrack Co. All rights reserved.
-        </footer>
+        <Footer />
+
       </section>
     </main>
   );
