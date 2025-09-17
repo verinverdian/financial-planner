@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FinanceTrack Co.
 
-## Getting Started
+FinanceTrack Co. is a modern personal finance management web application designed to help individuals track income, manage expenses, and achieve financial goals effectively. With an intuitive dashboard and robust reporting features, users can gain full visibility into their finances.
 
-First, run the development server:
+## Features
 
-```bash
+- Expense Tracking: Easily track daily expenses and see where your money goes.
+- Income Management: Manage multiple income sources in one dashboard.
+- Goal Setting: Create financial goals and track progress toward them.
+- Financial Reports: Generate monthly reports to keep your finances on track.
+- Interactive Dashboard: Visualize income vs expenses, category breakdowns, and 7-day trends.
+- Pagination: Navigate through income and expense records efficiently.
+
+## Screenshots
+### Landing Page
+- Clean and modern design with hero section and call-to-action.
+- Highlights features and pricing plans.
+<img width="560" height="1626" alt="image" src="https://github.com/user-attachments/assets/1b77eeb9-3793-412f-8d1d-a0a68f746e84" />
+
+### Dashboard
+- Overview of financial health, goals, and transaction history.
+- Graphs and charts for quick insights.
+- Ability to add, edit, and delete income and expenses.
+<img width="560" height="3678" alt="image" src="https://github.com/user-attachments/assets/a3f4a599-26f7-44c9-8078-e6acc787f1e4" />
+
+## Installation
+
+### Clone the repository:
+```
+git clone https://github.com/your-username/finance-track.git
+cd finance-track
+```
+### Install dependencies:
+```
+npm install
+# or
+yarn install
+```
+
+### Configure environment variables:
+
+Create a .env file with your database and API credentials (e.g., Supabase).
+
+Run the development server:
+```
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 to view the app in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Add Income/Expense: Use the left panel to add new transactions.
+- Track Goals: Add goals and assign portions of income toward achieving them.
+- View Reports: Check charts and summaries for insights on your spending habits.
+- Pagination: Use the navigation at the bottom of income/expense lists for easier browsing.
 
-## Learn More
+## Technologies
 
-To learn more about Next.js, take a look at the following resources:
+- Frontend: React, Next.js, Tailwind CSS
+- Backend: Supabase (PostgreSQL)
+- Charts: Recharts or similar for data visualization
+- Icons: Lucide-react
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Fork the repository
+- Create a new branch (git checkout -b feature/your-feature)
+- Commit your changes (git commit -m 'Add feature')
+- Push to the branch (git push origin feature/your-feature)
+- Open a pull request
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+This project is licensed under the MIT License.
