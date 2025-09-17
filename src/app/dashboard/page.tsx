@@ -45,6 +45,11 @@ export default function Dashboard() {
 
   const [refreshGoals, setRefreshGoals] = useState(false);
 
+  const goalsTotal = goals.length;
+
+  // goals tercapai (is_archived = true atau sesuai kondisi)
+  const goalsAchieved = goals.filter(g => g.is_archived).length;
+
   // bulan aktif (YYYY-MM)
   const [selectedMonth, setSelectedMonth] = useState<string>(
     new Date().toISOString().slice(0, 7)
@@ -233,6 +238,9 @@ export default function Dashboard() {
     };
   }, [filteredIncomes, filteredExpenses, incomes, expenses, selectedMonth]);
 
+  const incomeCount = filteredIncomes.length;
+  const expenseCount = filteredExpenses.length;
+
   // ================= Kategori terbesar =================
   const topCategory = useMemo(() => {
     if (filteredExpenses.length === 0) return null;
@@ -380,6 +388,10 @@ export default function Dashboard() {
               lastMonthExpense={totalExpensePrev}
               selectedMonth={selectedMonth}
               topCategory={topCategory || undefined}
+              goalsAchieved={goalsAchieved}   // 👈 oper ke props
+              goalsTotal={goalsTotal}         // 👈 oper ke props
+              incomeCount={incomeCount}      // ✅ tambahan
+              expenseCount={expenseCount}    // ✅ opsional, kalau mau dipakai di card
             />
           </div>
 
@@ -421,7 +433,7 @@ export default function Dashboard() {
           </div>
 
           {/* Expense List */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+          <div className="mb-2 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             {loading ? (
               <p className="text-gray-500">Memuat data pengeluaran...</p>
             ) : filteredExpenses.length > 0 ? (
@@ -436,7 +448,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <div className="mt-2">
         <Footer />
+      </div>
     </main>
   );
 }

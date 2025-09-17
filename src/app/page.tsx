@@ -57,8 +57,8 @@ export default function Home() {
                 Trusted by 50,000+ smart savers
               </div>
 
-              <h1 className="text-4xl md:text-5xl font-bold text-green-800 mb-4">
-                <span className="bg-green-200 px-2 rounded-lg">Reconnect</span> With Your Finances
+              <h1 className="text-4xl md:text-5xl font-bold text-green-800 mt-4 mb-4">
+                <span className="bg-green-200 px-2 rounded-lg">Reconnect</span> With Your Finances 💰
               </h1>
               <p className="text-gray-700 mb-6">
                 From tracking expenses to achieving big goals, discover a system

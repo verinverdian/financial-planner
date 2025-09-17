@@ -11,7 +11,6 @@ interface GoalCardProps {
   goals: GoalSaving[];
   onDeleted: (id: number) => void;
   onUpdated: (goal_savings: GoalSaving) => void;
-  // ✅ onAdded sekarang menerima optional newGoal agar parent bisa langsung menambahkan ke state
   onAdded?: (newGoal?: GoalSaving) => void;
 }
 
@@ -42,7 +41,7 @@ export default function GoalCard({ goals, onDeleted, onUpdated, onAdded }: GoalC
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const [visibleCount, setVisibleCount] = useState(3);
+  const [visibleCount, setVisibleCount] = useState(5); // default tampil 5
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -95,7 +94,7 @@ export default function GoalCard({ goals, onDeleted, onUpdated, onAdded }: GoalC
       }
 
       if (data) {
-        onUpdated(data as GoalSaving); // parent diinfokan
+        onUpdated(data as GoalSaving);
       }
 
       setEditingId(null);
@@ -112,7 +111,7 @@ export default function GoalCard({ goals, onDeleted, onUpdated, onAdded }: GoalC
 
   const handleConfirmDelete = () => {
     if (selectedId != null) {
-      onDeleted(selectedId); // parent handle delete
+      onDeleted(selectedId);
       setSelectedId(null);
       setShowConfirm(false);
     }
@@ -149,7 +148,7 @@ export default function GoalCard({ goals, onDeleted, onUpdated, onAdded }: GoalC
     );
 
   useEffect(() => {
-    setVisibleCount(3);
+    setVisibleCount(5);
   }, [search, showArchived]);
 
   const visibleGoals = filteredGoals.slice(0, visibleCount);
@@ -187,22 +186,14 @@ export default function GoalCard({ goals, onDeleted, onUpdated, onAdded }: GoalC
           onChange={(e) => setSearch(e.target.value)}
           className="px-2 py-1.5 text-sm border rounded-lg flex-1 w-full focus:outline-none focus:ring-2 focus:ring-green-400"
         />
-        <button
-          onClick={() => setSearch("")}
-          className="px-3 py-1.5 text-sm bg-gray-200 rounded-lg hover:bg-gray-300"
-        >
-          Reset
-        </button>
       </div>
 
       {/* Form tambah goal */}
       {!showArchived && showForm && (
         <div className="mb-4">
           <div className="mt-3 border rounded-lg p-3 bg-gray-50">
-            {/* forward newGoal dari GoalForm ke parent onAdded */}
             <GoalForm
               onAdded={(newGoal?: GoalSaving) => {
-                // jika parent menyediakan onAdded, berikan objek baru
                 if (onAdded) onAdded(newGoal);
                 setShowForm(false);
               }}
@@ -224,114 +215,64 @@ export default function GoalCard({ goals, onDeleted, onUpdated, onAdded }: GoalC
               key={String(goal.id)}
               className="border rounded-xl p-3 shadow-sm flex justify-between items-start bg-white"
             >
-              {editingId === idNum && editData ? (
-                <div className="w-full space-y-2">
-                  <p className="font-semibold">Edit Goal</p>
-                  <input
-                    type="text"
-                    value={editData.goal_name}
-                    onChange={(e) =>
-                      setEditData({ ...editData, goal_name: e.target.value })
-                    }
-                    className="w-full border rounded px-2 py-1"
-                  />
-                  <input
-                    type="number"
-                    value={editData.target_amount}
-                    onChange={(e) =>
-                      setEditData({ ...editData, target_amount: e.target.value })
-                    }
-                    className="w-full border rounded px-2 py-1"
-                  />
-                  <input
-                    type="number"
-                    value={editData.saved_amount}
-                    onChange={(e) =>
-                      setEditData({ ...editData, saved_amount: e.target.value })
-                    }
-                    className="w-full border rounded px-2 py-1"
-                  />
-                  <input
-                    type="date"
-                    value={editData.deadline}
-                    onChange={(e) =>
-                      setEditData({ ...editData, deadline: e.target.value })
-                    }
-                    className="w-full border rounded px-2 py-1"
-                  />
-                  <textarea
-                    value={editData.notes}
-                    onChange={(e) =>
-                      setEditData({ ...editData, notes: e.target.value })
-                    }
-                    className="w-full border rounded px-2 py-1"
-                    placeholder="Catatan (opsional)"
-                  />
-                  <div className="flex justify-end space-x-2">
-                    <button
-                      onClick={handleSave}
-                      className={`text-green-600 hover:text-green-700 ${loading ? "opacity-50" : ""}`}
-                      disabled={loading}
-                    >
-                      {loading ? "Saving..." : <Check size={18} />}
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="text-gray-500 hover:text-gray-600"
-                      disabled={loading}
-                    >
-                      <X size={18} />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="flex-1">
-                    <p className="font-semibold mb-1 flex items-center gap-2 capitalize">
-                      {goal.goal_name}
-                      {finished && !showArchived && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                          🎉 Hore, tercapai!
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Target: Rp {target.toLocaleString("id-ID")}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Saves: Rp {saved.toLocaleString("id-ID")}
-                    </p>
-                    <p className="text-xs italic text-gray-600 mt-1">
-                      Deadline: {goal.deadline ? goal.deadline : '-'}
-                    </p>
-                  </div>
-                  {!showArchived && (
-                    <div className="flex flex-col gap-2 ml-3">
-                      <button
-                        onClick={() => handleEdit(goal)}
-                        className="text-blue-500 hover:text-blue-600"
-                      >
-                        <Pencil size={18} />
-                      </button>
-                      <button
-                        onClick={() => confirmDelete(idNum)}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                      {finished && !goal.is_archived && (
-                        <button
-                          onClick={() => handleArchive(idNum)}
-                          className="text-yellow-500 hover:text-yellow-600"
-                          title="Arsipkan goal ini"
-                        >
-                          <Archive size={18} />
-                        </button>
-                      )}
-                    </div>
+              <div className="flex-1">
+                <p className="font-semibold mb-1 flex items-center gap-2 capitalize">
+                  {goal.goal_name}
+                  {finished && (
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                      🎉 Hore, tercapai!
+                    </span>
                   )}
-                </>
-              )}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Target: Rp {target.toLocaleString("id-ID")}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Saves: Rp {saved.toLocaleString("id-ID")}
+                </p>
+                <p className="text-xs italic text-gray-600 mt-1">
+                  Deadline: {goal.deadline ? goal.deadline : '-'}
+                </p>
+              </div>
+
+              {/* Aksi */}
+              <div className="flex flex-col gap-2 ml-3">
+                {!showArchived ? (
+                  <>
+                    <button
+                      onClick={() => handleEdit(goal)}
+                      className="text-blue-500 hover:text-blue-600"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                    <button
+                      onClick={() => confirmDelete(idNum)}
+                      className="text-red-500 hover:text-red-600"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                    {finished && !goal.is_archived && (
+                      <button
+                        onClick={() => handleArchive(idNum)}
+                        className="text-yellow-500 hover:text-yellow-600"
+                        title="Arsipkan goal ini"
+                      >
+                        <Archive size={18} />
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => confirmDelete(idNum)}
+                      className="text-red-500 hover:text-red-600"
+                      title="Hapus permanen"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           );
         })}
@@ -340,7 +281,7 @@ export default function GoalCard({ goals, onDeleted, onUpdated, onAdded }: GoalC
       {visibleCount < filteredGoals.length && (
         <div className="mt-4 text-center">
           <button
-            onClick={() => setVisibleCount((prev) => prev + 3)}
+            onClick={() => setVisibleCount((prev) => prev + 5)}
             className="bg-white hover:text-green-600 text-sm text-green-500"
           >
             Lihat lainnya...

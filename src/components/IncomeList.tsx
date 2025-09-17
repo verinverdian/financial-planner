@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Income } from '@/types/income';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
@@ -20,13 +20,12 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  // ✅ State untuk kontrol Load More
-  const [visibleCount, setVisibleCount] = useState(3);
+  // ✅ State untuk Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
-  // ✅ State untuk Filter
+  // ✅ State untuk Filter (hanya search)
   const [search, setSearch] = useState("");
-  const [month, setMonth] = useState<string>("");
-
 
   const handleEdit = (income: Income) => {
     setEditingId(income.id);
@@ -88,73 +87,44 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
     }
   };
 
-  // ✅ Terapkan filter pada data incomes
-  const filteredIncomes = incomes.filter((income) => {
-    const matchSearch = income.source.toLowerCase().includes(search.toLowerCase());
-    const matchMonth = month ? income.month_year.startsWith(month) : true;
-    return matchSearch && matchMonth;
-  });
+  // ✅ Terapkan filter search saja
+  const filteredIncomes = incomes.filter((income) =>
+    income.source.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // ✅ Pagination: hitung total halaman
+  const totalPages = Math.ceil(filteredIncomes.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const visibleIncomes = filteredIncomes.slice(startIndex, startIndex + itemsPerPage);
 
   if (filteredIncomes.length === 0) {
     return (
       <div>
-        {/* Filter tetap ditampilkan walau kosong */}
         <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
-        <div className="flex gap-2 mb-4">
-          <input
-            type="text"
-            placeholder="Cari sumber..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border px-3 py-2 rounded-xl w-full"
-          />
-          <input
-            type="month"
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-            className="border px-3 py-2 rounded-xl"
-          />
-          <button
-            onClick={() => {
-              setSearch("");
-              setMonth("");
-            }}
-            className="px-4 py-2 bg-gray-200 rounded-xl hover:bg-gray-300"
-          >
-            Reset
-          </button>
-        </div>
-        <p className="text-gray-500 mt-4">Belum ada pemasukan untuk bulan ini.</p>
-      </div>
-    );
-  }
-
-  // ✅ Potong data sesuai visibleCount
-  const visibleIncomes = filteredIncomes.slice(0, visibleCount);
-
-  return (
-    <div className="bg-white dark:bg-gray-800">
-      <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
-
-      {/* ✅ Filter Input + Reset */}
-      <p className="my-2 text-sm">Filter data pemasukan:</p>
-      <div className="flex flex-wrap items-center gap-2 mb-3">
         <input
           type="text"
           placeholder="Cari sumber..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="px-2 py-1.5 text-sm border rounded-lg flex-1 w-full focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
-        <button
-          onClick={() => {
-            setSearch("");
-          }}
-          className="px-3 py-1.5 text-sm bg-gray-200 rounded-lg hover:bg-gray-300"
-        >
-          Reset
-        </button>
+          className="border px-3 py-2 rounded-xl w-full mb-3"
+        />
+        <p className="text-gray-500 mt-4">Belum ada pemasukan.</p>
       </div>
+    );
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800">
+      <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
+
+      {/* ✅ Filter Input (search only) */}
+      <input
+        type="text"
+        placeholder="Cari sumber..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="px-2 py-1.5 text-sm border rounded-lg w-full mb-3 focus:outline-none focus:ring-2 focus:ring-green-400"
+      />
 
       <ul className="divide-y">
         {visibleIncomes.map((income) => (
@@ -217,8 +187,7 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
                     {income.notes && ` • Note: ${income.notes.length > 30
                         ? income.notes.substring(0, 30).trim() + '...'
                         : income.notes
-                      }`
-                    }
+                      }`}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -241,14 +210,33 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
         ))}
       </ul>
 
-      {/* ✅ Tombol Load More */}
-      {visibleCount < filteredIncomes.length && (
-        <div className="mt-4 text-center">
+      {/* ✅ Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-end mt-4 space-x-2 text-sm">
           <button
-            onClick={() => setVisibleCount((prev) => prev + 3)}
-            className="bg-white hover:text-green-600 text-sm text-green-500"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-2 py-1 border rounded-lg disabled:opacity-50"
           >
-            Lihat lainnya...
+            Prev
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`px-2 py-1 border rounded-lg ${
+                currentPage === page ? 'bg-green-500 text-white' : 'hover:bg-gray-100'
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-2 py-1 border rounded-lg disabled:opacity-50"
+          >
+            Next
           </button>
         </div>
       )}

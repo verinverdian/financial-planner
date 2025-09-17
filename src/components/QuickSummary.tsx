@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from "react";
 import React from "react";
 import {
@@ -9,10 +11,7 @@ import {
   Receipt,
   TrendingUp,
   TrendingDown,
-  RefreshCcw,
-  PlusCircle,
 } from "lucide-react";
-import IncomeTrend from "@/components/IncomeTrend";
 import BudgetsTracker from "@/components/BudgetsTracker";
 
 interface SummaryCardProps {
@@ -22,6 +21,14 @@ interface SummaryCardProps {
   lastMonthExpense: number;
   selectedMonth: string;
   topCategory?: { name: string; percentage: number };
+
+  // ✅ tambahan props untuk goals
+  goalsAchieved?: number;
+  goalsTotal?: number;
+
+  // ✅ tambahan props untuk jumlah transaksi
+  incomeCount?: number;
+  expenseCount?: number;
 }
 
 const categoryStyles: Record<string, { color: string; icon: React.ReactNode }> = {
@@ -50,33 +57,16 @@ export default function SummaryCard({
   lastMonthExpense,
   selectedMonth,
   topCategory,
+  goalsAchieved = 0,
+  goalsTotal = 0,
+  incomeCount = 0,
+  expenseCount = 0,
 }: SummaryCardProps) {
   const [showAmount, setShowAmount] = useState(true);
 
-  // ✅ Handler untuk tombol
-  const handleResetTarget = () => {
-    alert("Target berhasil direset! (Implementasikan logika reset di sini)");
-    console.log("Reset Target diklik");
-  };
-
-  const handleAddTransaction = () => {
-    alert("Form tambah transaksi akan dibuka! (Implementasikan modal di sini)");
-    console.log("Tambah Transaksi diklik");
-  };
-
   const monthNames = [
-    "Januari",
-    "Februari",
-    "Maret",
-    "April",
-    "Mei",
-    "Juni",
-    "Juli",
-    "Agustus",
-    "September",
-    "Oktober",
-    "November",
-    "Desember",
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
   ];
 
   const formatMonthYear = (selectedMonth: string) => {
@@ -103,7 +93,7 @@ export default function SummaryCard({
   return (
     <div className="bg-white">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-semibold text-gray-800">
           Ringkasan {formatMonthYear(selectedMonth)}
         </h2>
@@ -120,76 +110,101 @@ export default function SummaryCard({
 
       {/* Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Kolom 1: Budget Tracker */}
-        <div className="p-4 rounded-lg bg-gray-50">
+        {/* Kolom 1: Budget Tracker + Goals */}
+        <div className="">
           <BudgetsTracker totalExpense={totalExpense} />
-          {/* <div className="flex justify-end gap-3 mt-4">
-            //✅ Tombol interaktif
-            <button
-              onClick={handleResetTarget}
-              className="flex items-center gap-1 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg transition"
-            >
-              <RefreshCcw className="w-4 h-4" /> Atur Ulang Target
-            </button>
-            <button
-              onClick={handleAddTransaction}
-              className="flex items-center gap-1 text-sm bg-green-100 text-green-700 hover:bg-green-200 px-3 py-2 rounded-lg transition"
-            >
-              <PlusCircle className="w-4 h-4" /> Tambah Transaksi
-            </button>
-          </div> */}
+
+          {/* Goal Tercapai */}
+          {goalsTotal > 0 && (
+            <div className="mt-2 p-3 rounded-lg bg-gray-50 col-span-2">
+              <p className="text-sm text-gray-500">🎯 Goals Tercapai</p>
+              <h3 className="text-lg font-bold text-green-600 mt-1">
+                {goalsAchieved}/{goalsTotal}
+              </h3>
+              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                <div
+                  className="bg-green-500 h-1.5 rounded-full"
+                  style={{ width: goalsTotal > 0 ? `${(goalsAchieved / goalsTotal) * 100}%` : "0%" }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1 italic">
+                {goalsTotal > 0
+                  ? `${Math.round((goalsAchieved / goalsTotal) * 100)}% dari total goals`
+                  : "Belum ada goals"}
+              </p>
+            </div>
+          )}
         </div>
+
         {/* Kolom 2: Summary Cards */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 items-stretch">
           {/* Saldo Akhir */}
-          <div className="p-4 rounded-lg bg-gray-50">
-            <p className="text-sm text-gray-500">💰 Saldo Akhir</p>
-            <h3 className="text-xl font-bold text-blue-600 mt-1">
-              {showAmount ? formatMoney(safeBalance) : "•••••••"}
-            </h3>
+          <div className="p-4 rounded-lg bg-gray-50 h-full flex flex-col justify-between">
+            <div>
+              <p className="text-sm text-gray-500">💰 Saldo Akhir</p>
+              <h3 className="text-xl font-bold text-blue-600 mt-2">
+                {showAmount ? formatMoney(safeBalance) : "•••••••"}
+              </h3>
+            </div>
+            <p className="text-xs text-gray-500 mt-3 italic">
+              {((safeBalance / totalIncome) * 100).toFixed(1)}% dari pemasukan
+            </p>
           </div>
 
           {/* Total Pemasukan */}
-          <div className="p-4 rounded-lg bg-gray-50">
-            <p className="text-sm text-gray-500">📈 Total Pemasukan</p>
-            <h3 className="text-xl font-bold text-green-600 mt-1">
-              {showAmount ? formatMoney(totalIncome) : "•••••••"}
-            </h3>
+          <div className="p-4 rounded-lg bg-gray-50 h-full flex flex-col justify-between">
+            <div>
+              <p className="text-sm text-gray-500">📈 Total Pemasukan</p>
+              <h3 className="text-xl font-bold text-green-600 mt-2">
+                {showAmount ? formatMoney(totalIncome) : "•••••••"}
+              </h3>
+            </div>
+            <p className="text-xs text-gray-500 mt-3 italic">
+              {incomeCount} transaksi bulan ini
+            </p>
           </div>
 
           {/* Total Pengeluaran */}
-          <div className="p-4 rounded-lg bg-gray-50 col-span-2 sm:col-span-1">
-            <p className="text-sm text-gray-500">📉 Total Pengeluaran</p>
-            <h3 className="text-xl font-bold text-red-600 mt-1">
-              {showAmount ? formatMoney(totalExpense) : "•••••••"}
-            </h3>
-            <div className="w-full bg-gray-200 rounded-full h-3 mt-3 relative">
-              <div
-                className={`${getProgressColor(expensePercentage)} h-3 rounded-full transition-all duration-500`}
-                style={{ width: `${Math.min(expensePercentage, 100)}%` }}
-              ></div>
+          <div className="p-4 rounded-lg bg-gray-50 col-span-2 sm:col-span-1 h-full flex flex-col justify-between">
+            <div>
+              <p className="text-sm text-gray-500">📉 Total Pengeluaran</p>
+              <h3 className="text-xl font-bold text-red-600 mt-2">
+                {showAmount ? formatMoney(totalExpense) : "•••••••"}
+              </h3>
+              <div className="w-full bg-gray-200 rounded-full h-3 mt-3 relative">
+                <div
+                  className={`${getProgressColor(expensePercentage)} h-3 rounded-full transition-all duration-500`}
+                  style={{ width: `${Math.min(expensePercentage, 100)}%` }}
+                ></div>
+                <p className="text-xs text-gray-500 mt-2 italic"> {expensePercentage.toFixed(1)}% dari pemasukan </p>
+              </div>
             </div>
             <p className="text-xs text-gray-500 mt-2 italic">
-              {expensePercentage.toFixed(1)}% dari pemasukan
+              {expenseCount} transaksi bulan ini
             </p>
           </div>
 
           {/* Sisa Uang */}
-          <div className="p-4 rounded-lg bg-gray-50">
-            <p className="text-sm text-gray-500">
-              {balance >= 0 ? "💵 Sisa Uang" : "💵 Kekurangan"}
-            </p>
-            <h3
-              className={`text-xl font-bold mt-1 ${balance >= 0 ? "text-green-600" : "text-red-600"
+          <div className="p-4 rounded-lg bg-gray-50 h-full flex flex-col justify-between">
+            <div>
+              <p className="text-sm text-gray-500">
+                {balance >= 0 ? "💵 Sisa Uang" : "💵 Kekurangan"}
+              </p>
+              <h3
+                className={`text-xl font-bold mt-2 ${balance >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+              >
+                {showAmount ? formatMoney(Math.abs(balance)) : "•••••••"}
+              </h3>
+            </div>
+            <p
+              className={`text-xs mt-3 italic ${balance >= 0 ? "text-green-600" : "text-red-500"
                 }`}
             >
-              {showAmount ? formatMoney(Math.abs(balance)) : "•••••••"}
-            </h3>
-            {balance <= 0 && (
-              <p className="text-xs text-red-500 italic mt-6">
-                Catat pada pengeluaran di bulan berikutnya
-              </p>
-            )}
+              {balance >= 0
+                ? "Keuangan sehat 👍"
+                : "Catat pada pengeluaran bulan berikutnya"}
+            </p>
           </div>
         </div>
       </div>
@@ -220,8 +235,7 @@ export default function SummaryCard({
         {/* Kategori terbesar */}
         <div
           className={`p-3 rounded-lg border text-sm flex items-center gap-2 ${topCategory
-              ? categoryStyles[topCategory.name]?.color ||
-              "bg-gray-100 text-gray-700"
+              ? categoryStyles[topCategory.name]?.color || "bg-gray-100 text-gray-700"
               : "bg-gray-50 border-gray-200 text-gray-500 italic"
             }`}
         >
@@ -231,8 +245,7 @@ export default function SummaryCard({
               <span>
                 Kategori{" "}
                 <span className="font-semibold">{topCategory.name}</span>{" "}
-                paling besar: {topCategory.percentage.toFixed(1)}% dari total
-                pengeluaran.
+                paling besar: {topCategory.percentage.toFixed(1)}% dari total pengeluaran.
               </span>
             </>
           ) : (
@@ -240,8 +253,6 @@ export default function SummaryCard({
           )}
         </div>
       </div>
-
-      {/* <IncomeTrend percent={15.2} /> */}
     </div>
   );
 }

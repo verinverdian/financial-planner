@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 
 interface BudgetProps {
   totalExpense: number;
@@ -16,13 +17,27 @@ export default function BudgetsTracker({ totalExpense }: BudgetProps) {
     return "bg-green-500"; // safe
   };
 
-  const getStatusText = () => {
-    if (progress >= 100) return { text: "❌ Over Budget!", color: "text-red-600" };
-    if (progress >= 80) return { text: "⚠️ Mendekati Limit", color: "text-yellow-600" };
-    return { text: "✅ Aman", color: "text-green-600" };
+  const getStatus = () => {
+    if (progress >= 100)
+      return {
+        text: "Over Budget",
+        color: "text-red-600",
+        icon: <XCircle className="w-4 h-4 text-red-600" />,
+      };
+    if (progress >= 80)
+      return {
+        text: "Mendekati Limit",
+        color: "text-yellow-600",
+        icon: <AlertTriangle className="w-4 h-4 text-yellow-600" />,
+      };
+    return {
+      text: "Aman",
+      color: "text-green-600",
+      icon: <CheckCircle className="w-4 h-4 text-green-600" />,
+    };
   };
 
-  const status = getStatusText();
+  const status = getStatus();
 
   const formatNumber = (value: string) => {
     const numericValue = value.replace(/\D/g, "");
@@ -42,13 +57,15 @@ export default function BudgetsTracker({ totalExpense }: BudgetProps) {
   };
 
   return (
-    <div className="p-2 space-y-4">
-      <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">🎯 Target & Budget</h2>
+    <div className="p-4 rounded-xl bg-white shadow-sm border space-y-4">
+      <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+        🎯 Target & Budget
+      </h2>
 
       {/* Input Target */}
-      <div>
-        <label className="block text-sm mb-1 font-medium text-gray-600 dark:text-gray-300">
-          Set Target (Rp)
+      <div className="">
+        <label className="block text-sm mb-2 font-medium text-gray-600">
+          Set Target
         </label>
         <div className="flex gap-2">
           <input
@@ -56,11 +73,11 @@ export default function BudgetsTracker({ totalExpense }: BudgetProps) {
             inputMode="numeric"
             value={targetInput}
             onChange={handleAmountChange}
-            className="flex-1 p-3 border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-400 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+            className="flex-1 p-2.5 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-400"
           />
           <button
             onClick={resetTarget}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="px-4 py-2 bg-gray-100 rounded-lg text-gray-600 hover:bg-gray-200"
           >
             Reset
           </button>
@@ -69,25 +86,31 @@ export default function BudgetsTracker({ totalExpense }: BudgetProps) {
 
       {/* Progress bar */}
       <div>
-        <div className="flex justify-between text-xs mb-1 text-gray-500 dark:text-gray-400">
+        <div className="flex justify-between text-xs mb-1 text-gray-500">
           <span>{progress.toFixed(0)}%</span>
           <span>Limit: Rp {target.toLocaleString("id-ID")}</span>
         </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
           <div
-            className={`h-4 ${getProgressColor()} transition-all duration-300`}
+            className={`h-3 ${getProgressColor()} transition-all duration-300`}
             style={{ width: `${Math.min(progress, 100)}%` }}
           ></div>
         </div>
       </div>
 
       {/* Status */}
-      <p className={`text-sm font-medium ${status.color}`}>{status.text}</p>
+      <div className={`flex items-center gap-2 text-sm font-medium ${status.color}`}>
+        {status.icon}
+        {status.text}
+      </div>
 
       {/* Detail angka */}
-      <div className="text-sm text-gray-600 dark:text-gray-300">
-        Total Pengeluaran: <strong>Rp {totalExpense.toLocaleString("id-ID")}</strong>
-      </div>
+      {/* <div className="text-sm text-gray-600">
+        Total Pengeluaran:{" "}
+        <span className="font-semibold">
+          Rp {totalExpense.toLocaleString("id-ID")}
+        </span>
+      </div> */}
     </div>
   );
 }
