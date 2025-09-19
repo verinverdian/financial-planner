@@ -91,10 +91,10 @@ export default function SummaryCard({
   const expenseChangePct = lastMonthExpense === 0 ? 100 : (expenseDiff / lastMonthExpense) * 100;
 
   return (
-    <div className="bg-white">
+    <div className="bg-white dark:bg-gray-800">
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xl font-semibold text-gray-800">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
           Ringkasan {formatMonthYear(selectedMonth)}
         </h2>
         <div className="flex items-center gap-2">

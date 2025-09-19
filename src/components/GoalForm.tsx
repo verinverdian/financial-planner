@@ -68,40 +68,42 @@ export default function GoalForm({ onAdded }: GoalFormProps) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="dark:bg-gray-800 mb-4 flex flex-col gap-2"
-    >
-      <label className="text-lg font-bold">Goal</label>
-
-      <input
-        type="text"
-        placeholder="Nama Goal (misal: Tabungan Liburan)"
-        value={goalName}
-        onChange={(e) => setGoalName(e.target.value)}
-        className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-      />
-
-      <input
-        type="text"
-        inputMode="numeric"
-        placeholder="Target (Rp)"
-        value={targetAmount || ""}
-        onChange={setTargetAmountChange}
-        className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-      />
-
-      <button
-        type="submit"
-        disabled={isDisabled}
-        className={`text-md text-white px-4 py-2 rounded-lg transition 
-          ${isDisabled
-            ? "bg-gray-400"
-            : "bg-green-500 hover:bg-green-600"
-          }`}
+    <div className="bg-white dark:bg-gray-800 dark:text-gray-800">
+      <form
+        onSubmit={handleSubmit}
+        className="dark:bg-gray-800 mb-4 flex flex-col gap-2"
       >
-        {loading ? "Menyimpan..." : "Tambah Goal"}
-      </button>
-    </form>
+        <label className="text-lg font-bold">Goal</label>
+
+        <input
+          type="text"
+          placeholder="Nama Goal (misal: Tabungan Liburan)"
+          value={goalName}
+          onChange={(e) => setGoalName(e.target.value)}
+          className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+        />
+
+        <input
+          type="text"
+          inputMode="numeric"
+          placeholder="Target (Rp)"
+          value={targetAmount || ""}
+          onChange={setTargetAmountChange}
+          className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+        />
+
+        <button
+          type="submit"
+          disabled={isDisabled}
+          className={`text-md text-white px-4 py-2 rounded-lg transition 
+          ${isDisabled
+              ? "bg-gray-400"
+              : "bg-green-500 hover:bg-green-600"
+            }`}
+        >
+          {loading ? "Menyimpan..." : "Tambah Goal"}
+        </button>
+      </form>
+    </div>
   );
 }

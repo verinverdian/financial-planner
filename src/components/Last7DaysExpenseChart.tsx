@@ -71,7 +71,7 @@ export default function Last7DaysExpenseChart({ expenses, month }: Last7DaysExpe
     return <p className="text-gray-500">Belum ada pengeluaran 7 hari terakhir.</p>;
 
   return (
-    <div className="bg-white">
+    <div className="bg-white dark:bg-gray-800 dark:text-white">
       <h2 className="text-lg font-semibold mb-4">Pengeluaran 7 Hari Terakhir</h2>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart

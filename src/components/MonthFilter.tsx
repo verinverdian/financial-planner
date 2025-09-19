@@ -19,36 +19,37 @@ export default function MonthFilter({ value, onChange }: MonthFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex items-center gap-4 mb-4">
-      <label className="text-gray-700 font-medium">Pilih Bulan:</label>
-      <DatePicker
-        selected={selectedDate}
-        onChange={(date) => {
-          if (date) {
-            const newMonth = `${date.getFullYear()}-${String(
-              date.getMonth() + 1
-            ).padStart(2, "0")}`;
-            onChange(newMonth);
-            setIsOpen(false);
+    <div className="dark:bg-gray-600">
+      <div className="flex items-center gap-4 mb-4">
+        <label className="text-gray-700 font-medium">Pilih Bulan:</label>
+        <DatePicker
+          selected={selectedDate}
+          onChange={(date) => {
+            if (date) {
+              const newMonth = `${date.getFullYear()}-${String(
+                date.getMonth() + 1
+              ).padStart(2, "0")}`;
+              onChange(newMonth);
+              setIsOpen(false);
+            }
+          }}
+          dateFormat="MMMM yyyy"
+          showMonthYearPicker
+          locale={id} // Gunakan locale Indonesia
+          onCalendarOpen={() => setIsOpen(true)}
+          onCalendarClose={() => setIsOpen(false)}
+          customInput={
+            <button
+              type="button"
+              className={`flex items-center gap-2 bg-white border border-green-500 text-green-500 font-medium px-4 py-2 rounded-lg shadow-sm transition-all duration-300 hover:bg-green-500 hover:text-white ${isOpen ? "bg-green-500 text-white" : ""
+                }`}
+            >
+              <Calendar size={18} />
+              {format(selectedDate, "MMMM yyyy", { locale: id })}
+            </button>
           }
-        }}
-        dateFormat="MMMM yyyy"
-        showMonthYearPicker
-        locale={id} // Gunakan locale Indonesia
-        onCalendarOpen={() => setIsOpen(true)}
-        onCalendarClose={() => setIsOpen(false)}
-        customInput={
-          <button
-            type="button"
-            className={`flex items-center gap-2 bg-white border border-green-500 text-green-500 font-medium px-4 py-2 rounded-lg shadow-sm transition-all duration-300 hover:bg-green-500 hover:text-white ${
-              isOpen ? "bg-green-500 text-white" : ""
-            }`}
-          >
-            <Calendar size={18} />
-            {format(selectedDate, "MMMM yyyy", { locale: id })}
-          </button>
-        }
-      />
+        />
+      </div>
     </div>
   );
 }

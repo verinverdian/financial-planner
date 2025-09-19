@@ -114,17 +114,19 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800">
+    <div className="bg-white dark:bg-gray-800 dark:text-white">
       <h2 className="text-lg font-bold mb-2">Daftar Pemasukan</h2>
 
       {/* ✅ Filter Input (search only) */}
-      <input
-        type="text"
-        placeholder="Cari sumber..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="px-2 py-1.5 text-sm border rounded-lg w-full mb-3 focus:outline-none focus:ring-2 focus:ring-green-400"
-      />
+      <div className="dark:text-gray-800">
+        <input
+          type="text"
+          placeholder="Cari sumber..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="dark:text-gray-800 px-2 py-1.5 text-sm border rounded-lg w-full mb-3 focus:outline-none focus:ring-2 focus:ring-green-400"
+        />
+      </div>
 
       <ul className="divide-y">
         {visibleIncomes.map((income) => (
@@ -139,25 +141,34 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
                   type="text"
                   value={editData.source}
                   onChange={(e) => setEditData({ ...editData, source: e.target.value })}
-                  className="w-full border rounded px-2 py-1"
+                  className="w-full border rounded px-2 py-1 border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-400"
                 />
                 <input
-                  type="number"
-                  value={editData.amount}
-                  onChange={(e) => setEditData({ ...editData, amount: Number(e.target.value) })}
-                  className="w-full border rounded px-2 py-1"
+                  type="text"
+                  value={
+                    editData.amount
+                      ? editData.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/\./g, ""); // hapus titik
+                    if (/^\d*$/.test(raw)) {
+                      setEditData({ ...editData, amount: raw === "" ? 0 : Number(raw) });
+                    }
+                  }}
+                  className="w-full border rounded px-2 py-1 border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-400"
                 />
                 <input
                   type="month"
                   value={editData.month_year}
                   onChange={(e) => setEditData({ ...editData, month_year: e.target.value })}
-                  className="w-full border rounded px-2 py-1"
+                  className="w-full border rounded px-2 py-1 border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-400"
                 />
                 <input
                   type="text"
                   value={editData.notes ?? ''}
                   onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
-                  className="w-full border rounded px-2 py-1"
+                  className="w-full border rounded px-2 py-1 border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-400"
                   placeholder="Catatan (opsional)"
                 />
 
@@ -185,8 +196,8 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
                   <p className="text-sm text-gray-500">
                     Rp {Number(income.amount).toLocaleString('id-ID')} • {formatMonthYear(income.month_year)}
                     {income.notes && ` • Note: ${income.notes.length > 30
-                        ? income.notes.substring(0, 30).trim() + '...'
-                        : income.notes
+                      ? income.notes.substring(0, 30).trim() + '...'
+                      : income.notes
                       }`}
                   </p>
                 </div>
@@ -224,9 +235,8 @@ export default function IncomeList({ incomes, onDeleted, onUpdated }: IncomeList
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
-              className={`px-2 py-1 border rounded-lg ${
-                currentPage === page ? 'bg-green-500 text-white' : 'hover:bg-gray-100'
-              }`}
+              className={`px-2 py-1 border rounded-lg ${currentPage === page ? 'bg-green-500 text-white' : 'hover:bg-gray-100'
+                }`}
             >
               {page}
             </button>

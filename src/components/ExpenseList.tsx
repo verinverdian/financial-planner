@@ -125,11 +125,11 @@ export default function ExpenseList({ expenses, onDeleted, onUpdated }: ExpenseL
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-3 rounded-xl">
+    <div className="bg-white dark:bg-gray-800 dark:text-white">
       <h2 className="text-lg font-bold mb-3">Daftar Pengeluaran</h2>
 
       {/* ✅ Filter UI */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
+      <div className="flex flex-wrap items-center gap-2 mb-3 dark:text-gray-800">
         <input
           type="text"
           value={search}
@@ -175,7 +175,7 @@ export default function ExpenseList({ expenses, onDeleted, onUpdated }: ExpenseL
                   <select
                     value={editData.category}
                     onChange={(e) => setEditData({ ...editData, category: e.target.value })}
-                    className="w-full border rounded px-2 py-2"
+                    className="w-full border rounded px-2 py-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-400"
                   >
                     <option>Makanan</option>
                     <option>Transportasi</option>
@@ -187,27 +187,35 @@ export default function ExpenseList({ expenses, onDeleted, onUpdated }: ExpenseL
                     type="text"
                     value={editData.description ?? ''}
                     onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                    className="w-full border rounded px-2 py-1"
+                    className="w-full border rounded px-2 py-1 border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-400"
                     placeholder="Deskripsi"
                   />
-                  <input
-                    type="number"
-                    value={editData.amount}
-                    onChange={(e) => setEditData({ ...editData, amount: Number(e.target.value) })}
-                    className="w-full border rounded px-2 py-1"
-                    placeholder="Jumlah"
-                  />
+                <input
+                  type="text"
+                  value={
+                    editData.amount
+                      ? editData.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/\./g, ""); // hapus titik
+                    if (/^\d*$/.test(raw)) {
+                      setEditData({ ...editData, amount: raw === "" ? 0 : Number(raw) });
+                    }
+                  }}
+                  className="w-full border rounded px-2 py-1 border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-400"
+                />
                   <input
                     type="date"
                     value={editData.expense_date}
                     onChange={(e) => setEditData({ ...editData, expense_date: e.target.value })}
-                    className="w-full border rounded px-2 py-1"
+                    className="w-full border rounded px-2 py-1 border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-400"
                   />
                   <input
                     type="text"
                     value={editData.notes ?? ''}
                     onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
-                    className="w-full border rounded px-2 py-1"
+                    className="w-full border rounded px-2 py-1 border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-400"
                     placeholder="Catatan (opsional)"
                   />
 

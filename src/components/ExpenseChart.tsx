@@ -79,7 +79,7 @@ export default function ExpenseChart({ userId, month, expenses }: ExpenseChartPr
     return <p className="text-gray-500">Belum ada pengeluaran per kategori.</p>;
 
   return (
-    <div className="bg-white">
+    <div className="bg-white dark:bg-gray-800 dark:text-white">
       <h2 className="text-lg font-semibold mb-4">Pengeluaran per Kategori</h2>
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>

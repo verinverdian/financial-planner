@@ -348,7 +348,7 @@ export default function Dashboard() {
           <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             {loading ? (
               <p className="text-gray-500">Memuat goals...</p>
-            ) : goalsWithSaved.length >= 0 ? (
+            ) : goalsWithSaved.length > 0 ? (
               <GoalCard
                 goals={goalsWithSaved}
                 onDeleted={handleDeleteGoal}
@@ -382,7 +382,7 @@ export default function Dashboard() {
         {/* Kolom kanan */}
         <div className="w-full md:w-2/3 space-y-4">
           {/* Filter */}
-          <div className="pt-6 pl-6 bg-white">
+          <div className="pt-6 pl-6 bg-white dark:bg-gray-600">
             <MonthFilter
               value={selectedMonth}
               onChange={(month) => setSelectedMonth(month)}
@@ -410,13 +410,13 @@ export default function Dashboard() {
             <div className="flex-1 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
               <ExpenseChart expenses={filteredExpenses} month={selectedMonth} />
             </div>
-            <div className="flex-1 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-x-auto">
+            <div className="flex-1 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
               <Last7DaysExpenseChart expenses={filteredExpenses} month={selectedMonth} />
             </div>
           </div>
 
           {/* Trend */}
-          <div className="flex-1 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-x-auto">
+          <div className="flex-1 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             <IncomeExpenseTrendChart incomes={incomes} expenses={expenses} />
           </div>
 

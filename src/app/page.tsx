@@ -1,12 +1,10 @@
 'use client';
-//import Image from "next/image";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import { Wallet, TrendingUp, BarChart } from "lucide-react";
 import { supabase } from '@/lib/supabaseClient';
-
 
 export default function Home() {
   const router = useRouter();
@@ -32,17 +30,17 @@ export default function Home() {
   };
 
   return (
-    <main className="bg-gray-50 flex flex-col items-center justify-center">
-      <section className="bg-white w-full overflow-hidden">
+    <main className="bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center">
+      <section className="bg-white dark:bg-gray-800 w-full overflow-hidden transition-colors">
 
         {/* Navbar */}
         <Header />
 
         <div className="relative">
-          {/* Layer blur (z-0) */}
-          <div className="absolute inset-0 bg-gradient-to-b from-green-100/70 to-white blur-3xl z-0"></div>
+          {/* Layer blur */}
+          <div className="absolute inset-0 bg-gradient-to-b from-green-100/70 to-white dark:from-green-900/40 dark:to-gray-900 blur-3xl z-0"></div>
 
-          {/* Hero content (z-10) */}
+          {/* Hero */}
           <div
             className="relative mt-10 z-10 text-center px-8 py-16 min-h-[500px] flex items-center justify-center"
             style={{
@@ -53,19 +51,22 @@ export default function Home() {
             }}
           >
             <div className="max-w-2xl mx-auto">
-              <div className="bg-white/70 inline-block px-4 py-1 rounded-full text-sm mb-4">
+              <div className="bg-white/70 dark:bg-gray-700/70 inline-block px-4 py-1 rounded-full text-sm mb-4">
                 Trusted by 50,000+ smart savers
               </div>
 
-              <h1 className="text-4xl md:text-5xl font-bold text-green-800 mt-4 mb-4">
-                <span className="bg-green-200 px-2 rounded-lg">Reconnect</span> With Your Finances 💰
+              <h1 className="text-4xl md:text-5xl font-bold text-green-800 dark:text-green-400 mt-4 mb-4">
+                <span className="bg-green-200 dark:bg-green-800 px-2 rounded-lg">
+                  Reconnect
+                </span>{" "}
+                With Your Finances 💰
               </h1>
-              <p className="text-gray-700 mb-6">
+              <p className="text-gray-700 dark:text-gray-300 mb-6">
                 From tracking expenses to achieving big goals, discover a system
                 where your money works for you — and every decision feels right.
               </p>
 
-              {/* Start Tracking Button */}
+              {/* Start Tracking */}
               <button
                 onClick={handleStartTracking}
                 disabled={loading}
@@ -99,44 +100,57 @@ export default function Home() {
                 )}
                 {loading ? 'Checking...' : 'Start Tracking'}
               </button>
-
             </div>
           </div>
         </div>
 
-        {/* Features Section */}
-        <section id="features" className="py-20 bg-white">
+        {/* Features */}
+        <section id="features" className="py-20 bg-white dark:bg-gray-800 transition-colors">
           <div className="max-w-6xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-green-800 mb-8">Features</h2>
+            <h2 className="text-3xl font-bold text-green-800 dark:text-green-400 mb-8">
+              Features
+            </h2>
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="p-6 bg-gray-50 rounded-lg shadow flex flex-col items-center">
-                <Wallet className="h-12 w-12 text-green-700 mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Expense Tracking</h3>
-                <p className="text-gray-600">Easily track daily expenses and see where your money goes.</p>
+              <div className="p-6 bg-gray-50 dark:bg-gray-700 rounded-lg shadow flex flex-col items-center">
+                <Wallet className="h-12 w-12 text-green-700 dark:text-green-400 mb-4" />
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                  Expense Tracking
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Easily track daily expenses and see where your money goes.
+                </p>
               </div>
-              <div className="p-6 bg-gray-50 rounded-lg shadow flex flex-col items-center">
-                <TrendingUp className="h-12 w-12 text-green-700 mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Income Management</h3>
-                <p className="text-gray-600">Manage multiple income sources in one dashboard.</p>
+              <div className="p-6 bg-gray-50 dark:bg-gray-700 rounded-lg shadow flex flex-col items-center">
+                <TrendingUp className="h-12 w-12 text-green-700 dark:text-green-400 mb-4" />
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                  Income Management
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Manage multiple income sources in one dashboard.
+                </p>
               </div>
-              <div className="p-6 bg-gray-50 rounded-lg shadow flex flex-col items-center">
-                <BarChart className="h-12 w-12 text-green-700 mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Financial Reports</h3>
-                <p className="text-gray-600">Generate monthly reports to keep your finances on track.</p>
+              <div className="p-6 bg-gray-50 dark:bg-gray-700 rounded-lg shadow flex flex-col items-center">
+                <BarChart className="h-12 w-12 text-green-700 dark:text-green-400 mb-4" />
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                  Financial Reports
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Generate monthly reports to keep your finances on track.
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Pricing Section */}
-        <section id="pricing" className="py-20 bg-white">
+        {/* Pricing */}
+        <section id="pricing" className="py-20 bg-white dark:bg-gray-800 transition-colors">
           <div className="max-w-6xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-green-800 mb-8">Pricing</h2>
+            <h2 className="text-3xl font-bold text-green-800 dark:text-green-400 mb-8">Pricing</h2>
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="p-6 bg-white rounded-lg shadow transition-transform duration-300 hover:scale-105 hover:shadow-xl hover:border hover:border-green-600">
-                <h3 className="text-xl font-semibold mb-2">Free</h3>
-                <p className="text-gray-600 mb-4">$0/month</p>
-                <ul className="text-gray-500 mb-6 space-y-1">
+              <div className="p-6 bg-white dark:bg-gray-700 rounded-lg shadow hover:scale-105 transition">
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Free</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">$0/month</p>
+                <ul className="text-gray-500 dark:text-gray-400 mb-6 space-y-1">
                   <li>Basic expense tracking</li>
                   <li>Limited reports</li>
                 </ul>
@@ -144,11 +158,10 @@ export default function Home() {
                   Choose Plan
                 </button>
               </div>
-
-              <div className="p-6 bg-white rounded-lg shadow border-2 border-green-700 transition-transform duration-300 hover:scale-105 hover:shadow-xl hover:border-green-800">
-                <h3 className="text-xl font-semibold mb-2">Pro</h3>
-                <p className="text-gray-600 mb-4">$9.99/month</p>
-                <ul className="text-gray-500 mb-6 space-y-1">
+              <div className="p-6 bg-white dark:bg-gray-700 rounded-lg shadow border-2 border-green-700 transition hover:scale-105">
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Pro</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">$9.99/month</p>
+                <ul className="text-gray-500 dark:text-gray-400 mb-6 space-y-1">
                   <li>Unlimited tracking</li>
                   <li>Custom reports</li>
                   <li>Priority support</li>
@@ -157,11 +170,10 @@ export default function Home() {
                   Choose Plan
                 </button>
               </div>
-
-              <div className="p-6 bg-white rounded-lg shadow transition-transform duration-300 hover:scale-105 hover:shadow-xl hover:border hover:border-green-600">
-                <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
-                <p className="text-gray-600 mb-4">Custom</p>
-                <ul className="text-gray-500 mb-6 space-y-1">
+              <div className="p-6 bg-white dark:bg-gray-700 rounded-lg shadow hover:scale-105 transition">
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Enterprise</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">Custom</p>
+                <ul className="text-gray-500 dark:text-gray-400 mb-6 space-y-1">
                   <li>All Pro features</li>
                   <li>Dedicated account manager</li>
                 </ul>
@@ -173,12 +185,11 @@ export default function Home() {
           </div>
         </section>
 
-
-        {/* About Section */}
-        <section id="about" className="py-20 bg-white">
+        {/* About */}
+        <section id="about" className="py-20 bg-white dark:bg-gray-800 transition-colors">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-green-800 mb-8">About Us</h2>
-            <p className="text-gray-600">
+            <h2 className="text-3xl font-bold text-green-800 dark:text-green-400 mb-8">About Us</h2>
+            <p className="text-gray-600 dark:text-gray-300">
               FinanceTrack Co. is dedicated to helping individuals and businesses
               achieve financial freedom. With intuitive tools and clear insights,
               we make money management easy and effective.
