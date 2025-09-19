@@ -154,7 +154,7 @@ export default function GoalCard({ goals, onDeleted, onUpdated, onAdded }: GoalC
   const visibleGoals = filteredGoals.slice(0, visibleCount);
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
+    <div className="bg-white">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-lg font-bold">
           {showArchived ? "Arsip Goals" : "Daftar Goals"}

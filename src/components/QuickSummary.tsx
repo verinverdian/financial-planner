@@ -115,25 +115,23 @@ export default function SummaryCard({
           <BudgetsTracker totalExpense={totalExpense} />
 
           {/* Goal Tercapai */}
-          {goalsTotal > 0 && (
-            <div className="mt-2 p-3 rounded-lg bg-gray-50 col-span-2">
-              <p className="text-sm text-gray-500">🎯 Goals Tercapai</p>
-              <h3 className="text-lg font-bold text-green-600 mt-1">
-                {goalsAchieved}/{goalsTotal}
-              </h3>
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                <div
-                  className="bg-green-500 h-1.5 rounded-full"
-                  style={{ width: goalsTotal > 0 ? `${(goalsAchieved / goalsTotal) * 100}%` : "0%" }}
-                ></div>
-              </div>
-              <p className="text-xs text-gray-500 mt-1 italic">
-                {goalsTotal > 0
-                  ? `${Math.round((goalsAchieved / goalsTotal) * 100)}% dari total goals`
-                  : "Belum ada goals"}
-              </p>
+          <div className="mt-2 p-3 rounded-lg bg-gray-50 col-span-2">
+            <p className="text-sm text-gray-500">🎯 Goals Tercapai</p>
+            <h3 className="text-lg font-bold text-green-600 mt-1">
+              {goalsAchieved}/{goalsTotal}
+            </h3>
+            <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+              <div
+                className="bg-green-500 h-1.5 rounded-full"
+                style={{ width: goalsTotal > 0 ? `${(goalsAchieved / goalsTotal) * 100}%` : "0%" }}
+              ></div>
             </div>
-          )}
+            <p className="text-xs text-gray-500 mt-1 italic">
+              {goalsTotal > 0
+                ? `${Math.round((goalsAchieved / goalsTotal) * 100)}% dari total goals`
+                : "Belum ada goals"}
+            </p>
+          </div>
         </div>
 
         {/* Kolom 2: Summary Cards */}
@@ -147,7 +145,9 @@ export default function SummaryCard({
               </h3>
             </div>
             <p className="text-xs text-gray-500 mt-3 italic">
-              {((safeBalance / totalIncome) * 100).toFixed(1)}% dari pemasukan
+              {totalIncome > 0
+                ? `${((safeBalance / totalIncome) * 100).toFixed(1)}% dari pemasukan`
+                : "Belum ada pemasukan"}
             </p>
           </div>
 
@@ -214,8 +214,8 @@ export default function SummaryCard({
         {/* Perubahan pengeluaran */}
         <div
           className={`p-3 rounded-lg border text-sm flex items-center gap-2 ${expenseChangePct >= 0
-              ? "bg-red-100 border-red-200 text-red-700"
-              : "bg-green-50 border-green-200 text-green-700"
+            ? "bg-red-100 border-red-200 text-red-700"
+            : "bg-green-50 border-green-200 text-green-700"
             }`}
         >
           {expenseChangePct >= 0 ? (
@@ -235,8 +235,8 @@ export default function SummaryCard({
         {/* Kategori terbesar */}
         <div
           className={`p-3 rounded-lg border text-sm flex items-center gap-2 ${topCategory
-              ? categoryStyles[topCategory.name]?.color || "bg-gray-100 text-gray-700"
-              : "bg-gray-50 border-gray-200 text-gray-500 italic"
+            ? categoryStyles[topCategory.name]?.color || "bg-gray-100 text-gray-700"
+            : "bg-gray-50 border-gray-200 text-gray-500 italic"
             }`}
         >
           {topCategory ? (

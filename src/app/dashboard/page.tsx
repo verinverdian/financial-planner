@@ -348,7 +348,7 @@ export default function Dashboard() {
           <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
             {loading ? (
               <p className="text-gray-500">Memuat goals...</p>
-            ) : goalsWithSaved.length > 0 ? (
+            ) : goalsWithSaved.length >= 0 ? (
               <GoalCard
                 goals={goalsWithSaved}
                 onDeleted={handleDeleteGoal}
@@ -365,7 +365,17 @@ export default function Dashboard() {
               />
             ) : (
               <p className="text-gray-500">Belum ada goals.</p>
-            )}
+            )
+            }
+            <div className="">
+              {
+                goalsWithSaved.length === 0 ? (
+                  <p className="text-gray-500">Belum ada goals.</p>
+                ) : (
+                  <p className="text-gray-500"></p>
+                )
+              }
+            </div>
           </div>
         </div>
 
@@ -406,7 +416,7 @@ export default function Dashboard() {
           </div>
 
           {/* Trend */}
-          <div className="p-6">
+          <div className="flex-1 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-x-auto">
             <IncomeExpenseTrendChart incomes={incomes} expenses={expenses} />
           </div>
 

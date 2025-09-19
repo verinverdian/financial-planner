@@ -34,24 +34,30 @@ export default function IncomeExpenseTrendChart({ incomes, expenses }: Props) {
   const chartData = Object.values(dataMap).sort((a, b) => a.month.localeCompare(b.month));
 
   return (
-    <div style={{ width: "100%", height: 400 }}>
-      <h2 className="text-lg font-semibold mb-4">Tren Pemasukan vs Pengeluaran</h2>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={chartData}
-          margin={{ top: 20, right: 40, left: 40, bottom: 40 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="month" />
-          <YAxis tickFormatter={(val) => val.toLocaleString("id-ID")} />
-          <Tooltip formatter={(val: number) => val.toLocaleString("id-ID")} />
-          <Legend />
-          <Line type="monotone" dataKey="income" stroke="#10B981" name="Pemasukan" dot />
-          <Line type="monotone" dataKey="expense" stroke="#EF4444" name="Pengeluaran" dot />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="">
+      {chartData.length > 0 ? (
+        <div style={{ width: "100%", height: 400 }}>
+          <h2 className="text-lg font-semibold mb-4">Tren Pemasukan vs Pengeluaran</h2>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={chartData}
+              margin={{ top: 20, right: 40, left: 40, bottom: 40 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis tickFormatter={(val) => val.toLocaleString("id-ID")} />
+              <Tooltip formatter={(val: number) => val.toLocaleString("id-ID")} />
+              <Legend />
+              <Line type="monotone" dataKey="income" stroke="#10B981" name="Pemasukan" dot />
+              <Line type="monotone" dataKey="expense" stroke="#EF4444" name="Pengeluaran" dot />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <div className="text-gray-500">
+          Belum ada tren pemasukan dan pengeluaran.
+        </div>
+      )}
     </div>
   );
-  
-  
 }
