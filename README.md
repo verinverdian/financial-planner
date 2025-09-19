@@ -22,7 +22,8 @@ FinanceTrack Co. is a modern personal finance management web application designe
 - Overview of financial health, goals, and transaction history.
 - Graphs and charts for quick insights.
 - Ability to add, edit, and delete income and expenses.
-<img width="560" height="3586" alt="image" src="https://github.com/user-attachments/assets/91868c50-1a6e-4a9a-a6a2-5f40da297b82" />
+<img width="560" height="3538" alt="image" src="https://github.com/user-attachments/assets/033e89f5-5e08-4819-960d-37ce3189e93d" />
+
 
 
 ## Installation
